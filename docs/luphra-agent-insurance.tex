@@ -1,0 +1,83 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+
+\title{Luphra MicroCover\\
+\large Per-Action Insurance for Autonomous AI Agents}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{One-Line Pitch}
+Luphra lets AI agents buy insurance per action, priced in real time and paid through x402 on Algorand.
+
+\section*{Problem}
+\begin{itemize}[leftmargin=*]
+  \item AI agents are starting to spend money, call tools, send messages, book services, and make decisions for users and companies.
+  \item Today, companies mostly choose between blocking risky actions or giving agents broad permissions.
+  \item Static insurance premiums do not fit agent behavior because agent risk changes per action, context, budget, vendor, and token usage.
+  \item There is no simple way to price, pay for, and audit coverage at the exact moment an autonomous action happens.
+\end{itemize}
+
+\section*{Insight}
+Agents should not only be allowed or denied. They should be insurable.
+
+\section*{Solution}
+\begin{itemize}[leftmargin=*]
+  \item Luphra intercepts a proposed agent action before execution.
+  \item It scores the action based on context, amount, vendor, user policy, model confidence, and historical behavior.
+  \item It generates a dynamic micro-premium for that specific action.
+  \item The agent pays the premium via x402 on Algorand.
+  \item Luphra returns a verifiable coverage receipt, then the agent proceeds.
+\end{itemize}
+
+\section*{Demo Scenario}
+\begin{enumerate}[leftmargin=*]
+  \item A procurement agent wants to buy API credits from a new vendor.
+  \item Luphra receives the proposed action and scores the risk.
+  \item Luphra returns: risk score, premium, coverage limit, and reasons.
+  \item The agent pays the premium with x402 on Algorand TestNet.
+  \item Luphra issues a coverage receipt with an Algorand transaction ID.
+  \item The agent executes the purchase with coverage attached.
+\end{enumerate}
+
+\section*{Why Algorand}
+\begin{itemize}[leftmargin=*]
+  \item Per-action insurance needs tiny, high-frequency payments.
+  \item Dynamic premiums only work if payment fees are low and predictable.
+  \item Agent workflows need fast finality so actions do not wait for slow settlement.
+  \item Algorand provides a clean audit trail for payment and coverage receipts.
+\end{itemize}
+
+\section*{Why x402}
+\begin{itemize}[leftmargin=*]
+  \item x402 lets payment happen inside the HTTP request flow.
+  \item The agent can request coverage, receive payment requirements, pay, and retry automatically.
+  \item This removes subscriptions, manual billing, and separate checkout flows.
+\end{itemize}
+
+\section*{Product Surface}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Risk API:} accepts proposed agent action and returns risk score.
+  \item \textbf{Premium API:} returns dynamic premium and coverage terms.
+  \item \textbf{Coverage API:} issues receipt after x402 payment.
+  \item \textbf{Dashboard:} shows insured actions, premiums, receipts, and claims.
+\end{itemize}
+
+\section*{Hackathon Build}
+\begin{itemize}[leftmargin=*]
+  \item Python FastAPI server for Luphra coverage API.
+  \item Mock agent client that proposes risky actions.
+  \item Dynamic premium calculator.
+  \item x402 payment-gated coverage endpoint on Algorand TestNet.
+  \item Simple receipt page or JSON response with coverage details and transaction proof.
+\end{itemize}
+
+\section*{Closing}
+As agents become economic actors, every autonomous transaction needs risk control. Luphra turns insurance from a static monthly product into a programmable, per-action primitive for the agent economy.
+
+\end{document}
