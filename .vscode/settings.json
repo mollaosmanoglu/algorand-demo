@@ -5,7 +5,8 @@
     "**/*.fls": true,
     "**/*.log": true,
     "**/*.out": true,
-    "**/*.synctex.gz": true
+    "**/*.synctex.gz": true,
+    "**/*.toc": true
   },
   "search.exclude": {
     "**/*.aux": true,
@@ -13,6 +14,7 @@
     "**/*.fls": true,
     "**/*.log": true,
     "**/*.out": true,
-    "**/*.synctex.gz": true
+    "**/*.synctex.gz": true,
+    "**/*.toc": true
   }
 }
