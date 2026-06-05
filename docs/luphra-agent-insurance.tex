@@ -40,13 +40,6 @@ Traditional insurance premiums are also poorly matched to agent activity. The
 risk can vary with the transaction amount, vendor, requested action, user
 policy, model confidence, and execution context.
 
-\subsection{Current Status}
-
-The repository contains a minimal Python FastAPI resource server. The
-\texttt{/coverage} endpoint is protected by x402 middleware and advertises an
-Algorand TestNet USDC payment. A paying agent client, dynamic quote service,
-and coverage receipt are not yet implemented.
-
 \section{Goals and Non-Goals}
 
 \subsection{Goals}
@@ -265,6 +258,12 @@ Private keys and complete signed payloads must never be logged.
 \section{References}
 
 \begin{enumerate}[label={[\arabic*]},leftmargin=*]
+  \item 0xMihej, AI Agents Berlin, and Algorand Foundation,
+  ``Algorand Builders Berlin: Agentic Commerce x402 Hackathon \$21,000+
+  Prize-Pool,'' \textit{Luma}, June 6--7, 2026. Available:
+  \href{https://lu.ma/agentic-commerce-hack}{Luma event page}.
+  Accessed: June 5, 2026.
+
   \item Algorand Foundation, ``x402 on Algorand,'' \textit{Algorand
   Developer Portal}, n.d. Available:
   \href{https://dev.algorand.co/resources/x402-on-algorand/}
