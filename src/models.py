@@ -29,6 +29,8 @@ class RiskAssessment(BaseModel):
     risk_level: RiskLevel
     rationale: str
     requires_coverage: bool
+    premium_usdc: Decimal | None = None
+    coverage_limit_usdc: Decimal | None = None
 
 
 class Quote(BaseModel):
