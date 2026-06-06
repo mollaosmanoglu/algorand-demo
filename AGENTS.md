@@ -1,4 +1,5 @@
 <cli_tools>
+- `playwright-cli`: for debugging frontend
 - `gh`: Issues and PRs. `gh issue list`/`create`/`view`. Labels: `bug`, `feature`, `question`.
 - `tvly`: Web search and research. `tvly search`, `tvly extract`, `tvly research`.
 - `osascript`: Apple Calendar & Reminders via AppleScript. Calendar "Work" for events. Build dates programmatically (Dutch locale — string dates don't parse).

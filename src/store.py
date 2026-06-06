@@ -50,17 +50,27 @@ def get_quote(quote_id: str) -> Quote:
     return quotes[quote_id]
 
 
-def consume_quote(
+def get_payable_quote(
     quote_id: str,
     now: datetime | None = None,
 ) -> Quote:
     quote = get_quote(quote_id)
-    consumed_at = now or datetime.now(UTC)
+    checked_at = now or datetime.now(UTC)
 
     if quote.consumed_at is not None:
         raise ValueError("quote has already been consumed")
-    if consumed_at >= quote.expires_at:
+    if checked_at >= quote.expires_at:
         raise ValueError("quote has expired")
+
+    return quote
+
+
+def consume_quote(
+    quote_id: str,
+    now: datetime | None = None,
+) -> Quote:
+    consumed_at = now or datetime.now(UTC)
+    quote = get_payable_quote(quote_id, consumed_at)
 
     consumed_quote = quote.model_copy(update={"consumed_at": consumed_at})
     quotes[quote_id] = consumed_quote

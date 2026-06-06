@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
-from x402.http.types import RouteConfig
+from x402.http.types import HTTPRequestContext, RouteConfig
 from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
 from src.models import Decision, EvaluateRequest, EvaluateResponse
-from src.store import create_action, create_quote
+from src.store import create_action, create_quote, get_payable_quote
 from src.underwriter import evaluate_action
 
 # AVM Python reference:
@@ -33,12 +33,18 @@ server.register(
     ExactAvmServerScheme(),  # pyright: ignore[reportArgumentType]
 )
 
+def quote_price(context: HTTPRequestContext) -> str:
+    quote_id = context.path.rstrip("/").rsplit("/", maxsplit=1)[-1]
+    quote = get_payable_quote(quote_id)
+    return f"${quote.premium_usdc}"
+
+
 routes = {
-    "GET /coverage": RouteConfig(
+    "POST /coverage/*": RouteConfig(
         accepts=PaymentOption(
             scheme="exact",
             pay_to=avm_address,
-            price="$0.01",
+            price=quote_price,
             network=ALGORAND_TESTNET_CAIP2,
         ),
         description="Per-action AI agent coverage",
@@ -99,13 +105,10 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
     )
 
 
-@app.get("/coverage")
-async def coverage() -> dict[str, str]:
-    return {
-        "status": "covered",
-        "coverage_limit": "$100",
-        "message": "The agent action is insured.",
-    }
+@app.post("/coverage/{quote_id}")
+async def coverage(quote_id: str) -> dict[str, str]:
+    get_payable_quote(quote_id)
+    return {"status": "paid", "quote_id": quote_id}
 
 
 if __name__ == "__main__":
