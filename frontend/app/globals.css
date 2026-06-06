@@ -107,7 +107,7 @@
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
 
   /* Dashboard typography */
-  --text-hero: 72px;
+  --text-hero: 36px;
   --text-hero--line-height: 1.05;
   --text-hero--letter-spacing: -0.025em;
   --text-display: 24px;

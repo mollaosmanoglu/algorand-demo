@@ -143,11 +143,11 @@ export function MetricCards() {
           <Card className="bg-card border-none shadow-none">
             <CardHeader className="px-3 pt-3 pb-2">
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <CardTitle className="text-body font-semibold text-foreground">
+                <div className="space-y-1">
+                  <CardTitle className="text-section font-semibold text-foreground">
                     {metric.label}
                   </CardTitle>
-                  <CardDescription className="text-caption">
+                  <CardDescription className="text-body text-muted-foreground">
                     {metric.id === "total_calls" && `Total call volume over the last ${selectedRange === "7" ? "week" : selectedRange === "30" ? "month" : "year"}`}
                     {metric.id === "today_calls" && "Calls distributed throughout the day"}
                     {metric.id === "qualification_rate" && `Qualified lead percentage over the last ${selectedRange === "7" ? "week" : selectedRange === "30" ? "month" : "year"}`}
