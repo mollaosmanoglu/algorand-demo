@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "LUPHRA_HOOK_EVENT=PreToolUse uv run python hooks/luphra_hooks.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "LUPHRA_HOOK_EVENT=PostToolUse uv run python hooks/luphra_hooks.py"
+          }
+        ]
+      }
+    ]
+  }
+}
