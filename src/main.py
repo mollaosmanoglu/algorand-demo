@@ -9,8 +9,21 @@ from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
-from src.models import CoverageReceipt, Decision, EvaluateRequest, EvaluateResponse
-from src.store import create_action, create_quote, create_receipt, get_payable_quote
+from src.models import (
+    CoverageReceipt,
+    Decision,
+    EvaluateRequest,
+    EvaluateResponse,
+    OutcomeRequest,
+    ToolOutcome,
+)
+from src.store import (
+    create_action,
+    create_outcome,
+    create_quote,
+    create_receipt,
+    get_payable_quote,
+)
 from src.underwriter import evaluate_action
 
 # AVM Python reference:
@@ -117,6 +130,20 @@ async def coverage(quote_id: str) -> CoverageReceipt:
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="quote not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/outcome/{action_id}")
+async def outcome(action_id: str, request: OutcomeRequest) -> ToolOutcome:
+    try:
+        return create_outcome(
+            action_id=action_id,
+            state=request.state,
+            result_summary=request.result_summary,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="action not found") from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

@@ -2,11 +2,12 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
-from src.models import CoverageReceipt, Quote, ToolAction
+from src.models import CoverageReceipt, OutcomeState, Quote, ToolAction, ToolOutcome
 
 actions: dict[str, ToolAction] = {}
 quotes: dict[str, Quote] = {}
 receipts: dict[str, CoverageReceipt] = {}
+outcomes: dict[str, ToolOutcome] = {}
 
 
 def create_action(
@@ -60,6 +61,24 @@ def get_receipt_by_quote_id(quote_id: str) -> CoverageReceipt:
         if receipt.quote_id == quote_id:
             return receipt
     raise KeyError(quote_id)
+
+
+def get_receipt_by_action_id(action_id: str) -> CoverageReceipt:
+    for receipt in receipts.values():
+        if receipt.action_id == action_id:
+            return receipt
+    raise KeyError(action_id)
+
+
+def get_outcome(outcome_id: str) -> ToolOutcome:
+    return outcomes[outcome_id]
+
+
+def get_outcome_by_action_id(action_id: str) -> ToolOutcome:
+    for outcome in outcomes.values():
+        if outcome.action_id == action_id:
+            return outcome
+    raise KeyError(action_id)
 
 
 def get_payable_quote(
@@ -119,6 +138,38 @@ def create_receipt(
     )
     receipts[receipt.id] = receipt
     return receipt
+
+
+def create_outcome(
+    action_id: str,
+    state: OutcomeState,
+    result_summary: str | None = None,
+    now: datetime | None = None,
+) -> ToolOutcome:
+    action = get_action(action_id)
+    try:
+        get_outcome_by_action_id(action.id)
+    except KeyError:
+        pass
+    else:
+        raise ValueError("outcome has already been recorded")
+
+    try:
+        receipt = get_receipt_by_action_id(action.id)
+        coverage_receipt_id = receipt.id
+    except KeyError:
+        coverage_receipt_id = None
+
+    outcome = ToolOutcome(
+        id=_new_id("outcome"),
+        action_id=action.id,
+        coverage_receipt_id=coverage_receipt_id,
+        state=state,
+        result_summary=result_summary,
+        recorded_at=now or datetime.now(UTC),
+    )
+    outcomes[outcome.id] = outcome
+    return outcome
 
 
 def _new_id(prefix: str) -> str:

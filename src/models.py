@@ -16,6 +16,12 @@ class RiskLevel(StrEnum):
     HIGH = "high"
 
 
+class OutcomeState(StrEnum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 class ToolAction(BaseModel):
     id: str
     agent_id: str
@@ -55,6 +61,15 @@ class CoverageReceipt(BaseModel):
     settlement_transaction: str | None = None
 
 
+class ToolOutcome(BaseModel):
+    id: str
+    action_id: str
+    coverage_receipt_id: str | None = None
+    state: OutcomeState
+    result_summary: str | None = None
+    recorded_at: datetime
+
+
 class EvaluateRequest(BaseModel):
     agent_id: str
     tool_name: str
@@ -71,3 +86,8 @@ class EvaluateResponse(BaseModel):
     premium_usdc: Decimal | None = None
     coverage_limit_usdc: Decimal | None = None
     expires_at: datetime | None = None
+
+
+class OutcomeRequest(BaseModel):
+    state: OutcomeState
+    result_summary: str | None = Field(default=None, max_length=500)
