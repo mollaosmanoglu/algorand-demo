@@ -52,7 +52,7 @@ export default function DashboardPage() {
               <div className="space-y-2">
                 <div className="pb-4 pt-2">
                   <h2 className="text-hero font-semibold text-foreground">
-                    Good morning
+                    Good morning Faruk
                   </h2>
                 </div>
 
