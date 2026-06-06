@@ -218,7 +218,7 @@ export function AgentsPage({
         </section>
 
         <CollapsibleContent asChild forceMount>
-          <aside className="hidden w-[360px] shrink-0 flex-col bg-card data-[state=closed]:lg:hidden lg:flex">
+          <aside className="hidden w-[min(46vw,560px)] min-w-[430px] shrink-0 flex-col bg-card data-[state=closed]:lg:hidden lg:flex">
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
                 <Tabs defaultValue="changes" className="gap-0">

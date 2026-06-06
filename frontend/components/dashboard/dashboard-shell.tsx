@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Suspense } from "react"
 import type * as React from "react"
 
@@ -21,6 +22,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
       } as React.CSSProperties}
     >
       <div className="flex h-screen w-full bg-background overflow-hidden">
+        <Image
+          src="/images/luphra-logo.png"
+          alt="Luphra"
+          width={168}
+          height={39}
+          priority
+          className="fixed left-5 top-3 z-30 h-auto w-[100px]"
+        />
         <Suspense fallback={null}>
           <DashboardSidebar />
         </Suspense>
