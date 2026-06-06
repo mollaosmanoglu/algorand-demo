@@ -16,11 +16,24 @@ class RiskLevel(StrEnum):
     HIGH = "high"
 
 
+class OutcomeState(StrEnum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 class ToolAction(BaseModel):
     id: str
     agent_id: str
     tool_name: str
     arguments: dict[str, object]
+    created_at: datetime
+
+
+class DashboardAction(BaseModel):
+    id: str
+    agent_id: str
+    tool_name: str
     created_at: datetime
 
 
@@ -42,6 +55,28 @@ class Quote(BaseModel):
     consumed_at: datetime | None = None
 
 
+class CoverageReceipt(BaseModel):
+    id: str
+    action_id: str
+    quote_id: str
+    premium_usdc: Decimal
+    coverage_limit_usdc: Decimal
+    network: str
+    asset: str
+    activated_at: datetime
+    payer: str | None = None
+    settlement_transaction: str | None = None
+
+
+class ToolOutcome(BaseModel):
+    id: str
+    action_id: str
+    coverage_receipt_id: str | None = None
+    state: OutcomeState
+    result_summary: str | None = None
+    recorded_at: datetime
+
+
 class EvaluateRequest(BaseModel):
     agent_id: str
     tool_name: str
@@ -58,3 +93,33 @@ class EvaluateResponse(BaseModel):
     premium_usdc: Decimal | None = None
     coverage_limit_usdc: Decimal | None = None
     expires_at: datetime | None = None
+
+
+class OutcomeRequest(BaseModel):
+    state: OutcomeState
+    result_summary: str | None = Field(default=None, max_length=500)
+
+
+class DashboardEventType(StrEnum):
+    SNAPSHOT = "snapshot"
+    EVALUATION = "evaluation"
+    COVERAGE = "coverage"
+    OUTCOME = "outcome"
+
+
+class DashboardSnapshot(BaseModel):
+    actions: list[DashboardAction]
+    quotes: list[Quote]
+    receipts: list[CoverageReceipt]
+    outcomes: list[ToolOutcome]
+
+
+class DashboardEvent(BaseModel):
+    type: DashboardEventType
+    created_at: datetime
+    snapshot: DashboardSnapshot | None = None
+    action: DashboardAction | None = None
+    evaluation: EvaluateResponse | None = None
+    quote: Quote | None = None
+    receipt: CoverageReceipt | None = None
+    outcome: ToolOutcome | None = None

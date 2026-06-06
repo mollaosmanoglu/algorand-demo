@@ -1,16 +1,32 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
-from x402.http.types import RouteConfig
+from x402.http.types import HTTPRequestContext, RouteConfig
 from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
-from src.models import Decision, EvaluateRequest, EvaluateResponse
-from src.store import create_action, create_quote
+from src import events as event_stream
+from src.models import (
+    CoverageReceipt,
+    Decision,
+    EvaluateRequest,
+    EvaluateResponse,
+    OutcomeRequest,
+    ToolOutcome,
+)
+from src.store import (
+    create_action,
+    create_dashboard_snapshot,
+    create_outcome,
+    create_quote,
+    create_receipt,
+    get_payable_quote,
+    to_dashboard_action,
+)
 from src.underwriter import evaluate_action
 
 # AVM Python reference:
@@ -33,12 +49,18 @@ server.register(
     ExactAvmServerScheme(),  # pyright: ignore[reportArgumentType]
 )
 
+def quote_price(context: HTTPRequestContext) -> str:
+    quote_id = context.path.rstrip("/").rsplit("/", maxsplit=1)[-1]
+    quote = get_payable_quote(quote_id)
+    return f"${quote.premium_usdc}"
+
+
 routes = {
-    "GET /coverage": RouteConfig(
+    "POST /coverage/*": RouteConfig(
         accepts=PaymentOption(
             scheme="exact",
             pay_to=avm_address,
-            price="$0.01",
+            price=quote_price,
             network=ALGORAND_TESTNET_CAIP2,
         ),
         description="Per-action AI agent coverage",
@@ -48,10 +70,22 @@ routes = {
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=server)
 
+COVERAGE_ASSET = "USDC"
+
 
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.websocket("/events")
+async def events(websocket: WebSocket) -> None:
+    await event_stream.connect(websocket, create_dashboard_snapshot())
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        event_stream.disconnect(websocket)
 
 
 @app.post("/evaluate")
@@ -64,13 +98,19 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
     assessment = await evaluate_action(action)
 
     if assessment.decision is Decision.DENY or not assessment.requires_coverage:
-        return EvaluateResponse(
+        response = EvaluateResponse(
             action_id=action.id,
             decision=assessment.decision,
             risk_level=assessment.risk_level,
             rationale=assessment.rationale,
             requires_coverage=assessment.requires_coverage,
         )
+        await event_stream.publish_evaluation(
+            action=to_dashboard_action(action),
+            evaluation=response,
+            quote=None,
+        )
+        return response
 
     if (
         assessment.premium_usdc is None
@@ -86,7 +126,7 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         premium_usdc=assessment.premium_usdc,
         coverage_limit_usdc=assessment.coverage_limit_usdc,
     )
-    return EvaluateResponse(
+    response = EvaluateResponse(
         action_id=action.id,
         decision=assessment.decision,
         risk_level=assessment.risk_level,
@@ -97,15 +137,44 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         coverage_limit_usdc=quote.coverage_limit_usdc,
         expires_at=quote.expires_at,
     )
+    await event_stream.publish_evaluation(
+        action=to_dashboard_action(action),
+        evaluation=response,
+        quote=quote,
+    )
+    return response
 
 
-@app.get("/coverage")
-async def coverage() -> dict[str, str]:
-    return {
-        "status": "covered",
-        "coverage_limit": "$100",
-        "message": "The agent action is insured.",
-    }
+@app.post("/coverage/{quote_id}")
+async def coverage(quote_id: str) -> CoverageReceipt:
+    try:
+        receipt = create_receipt(
+            quote_id=quote_id,
+            network=ALGORAND_TESTNET_CAIP2,
+            asset=COVERAGE_ASSET,
+        )
+        await event_stream.publish_coverage(receipt)
+        return receipt
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="quote not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/outcome/{action_id}")
+async def outcome(action_id: str, request: OutcomeRequest) -> ToolOutcome:
+    try:
+        recorded_outcome = create_outcome(
+            action_id=action_id,
+            state=request.state,
+            result_summary=request.result_summary,
+        )
+        await event_stream.publish_outcome(recorded_outcome)
+        return recorded_outcome
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="action not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 if __name__ == "__main__":

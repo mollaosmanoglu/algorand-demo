@@ -1,0 +1,81 @@
+from datetime import UTC, datetime
+
+from fastapi import WebSocket
+
+from src.models import (
+    CoverageReceipt,
+    DashboardAction,
+    DashboardEvent,
+    DashboardEventType,
+    DashboardSnapshot,
+    EvaluateResponse,
+    Quote,
+    ToolOutcome,
+)
+
+subscribers: set[WebSocket] = set()
+
+
+async def connect(websocket: WebSocket, snapshot: DashboardSnapshot) -> None:
+    await websocket.accept()
+    subscribers.add(websocket)
+    await websocket.send_text(
+        DashboardEvent(
+            type=DashboardEventType.SNAPSHOT,
+            created_at=datetime.now(UTC),
+            snapshot=snapshot,
+        ).model_dump_json()
+    )
+
+
+def disconnect(websocket: WebSocket) -> None:
+    subscribers.discard(websocket)
+
+
+async def publish_evaluation(
+    action: DashboardAction,
+    evaluation: EvaluateResponse,
+    quote: Quote | None,
+) -> None:
+    await broadcast(
+        DashboardEvent(
+            type=DashboardEventType.EVALUATION,
+            created_at=datetime.now(UTC),
+            action=action,
+            evaluation=evaluation,
+            quote=quote,
+        )
+    )
+
+
+async def publish_coverage(receipt: CoverageReceipt) -> None:
+    await broadcast(
+        DashboardEvent(
+            type=DashboardEventType.COVERAGE,
+            created_at=datetime.now(UTC),
+            receipt=receipt,
+        )
+    )
+
+
+async def publish_outcome(outcome: ToolOutcome) -> None:
+    await broadcast(
+        DashboardEvent(
+            type=DashboardEventType.OUTCOME,
+            created_at=datetime.now(UTC),
+            outcome=outcome,
+        )
+    )
+
+
+async def broadcast(event: DashboardEvent) -> None:
+    disconnected: list[WebSocket] = []
+    message = event.model_dump_json()
+    for subscriber in subscribers:
+        try:
+            await subscriber.send_text(message)
+        except RuntimeError:
+            disconnected.append(subscriber)
+
+    for subscriber in disconnected:
+        disconnect(subscriber)
