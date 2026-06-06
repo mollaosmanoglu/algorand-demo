@@ -15,8 +15,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <SidebarProvider
       defaultOpen
       style={{
-        "--sidebar-width": "160px",
-        "--sidebar-width-icon": "44px",
+        "--sidebar-width": "240px",
+        "--sidebar-width-icon": "52px",
       } as React.CSSProperties}
     >
       <div className="flex h-screen w-full bg-background overflow-hidden">
