@@ -2,9 +2,7 @@
 
 import { Bot, ChevronDown, LayoutDashboard } from 'lucide-react'
 import Link from "next/link"
-import Image from "next/image"
 import { usePathname, useSearchParams } from "next/navigation"
-import { useState } from "react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,7 +11,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -28,7 +25,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export function DashboardSidebar() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [isLogoHovered, setIsLogoHovered] = useState(false)
 
   const navItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/" },
@@ -43,61 +39,23 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r-0" style={{ '--sidebar-width': '240px', '--sidebar-width-icon': '52px' } as React.CSSProperties}>
-      <SidebarHeader className="px-3 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo - shown when sidebar is open */}
-          <Image
-            src="/images/logo.svg"
-            alt="Logo"
-            width={104}
-            height={30}
-            className="w-[104px] h-auto group-data-[collapsible=icon]:hidden"
-          />
-
-          {/* Collapsed logo with hover effect - shows expand icon on hover */}
-          <div className="hidden group-data-[collapsible=icon]:flex items-center justify-center w-full relative">
+      <SidebarContent className="px-3 pt-10 pb-2 space-y-5 group-data-[collapsible=icon]:space-y-2">
+        {/* ACCOUNT Section */}
+        <div className="space-y-2">
+          <div className="flex h-8 items-center justify-between px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <h2 className="text-body font-semibold uppercase tracking-wide text-muted-foreground group-data-[collapsible=icon]:hidden">
+              Account
+            </h2>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div
-                  className="relative w-8 h-8 flex items-center justify-center cursor-pointer"
-                  onMouseEnter={() => setIsLogoHovered(true)}
-                  onMouseLeave={() => setIsLogoHovered(false)}
-                >
-                  <Image
-                    src="/images/logo-single.svg"
-                    alt="Logo"
-                    width={24}
-                    height={24}
-                    className={`absolute transition-opacity duration-200 ${isLogoHovered ? 'opacity-0' : 'opacity-100'}`}
-                  />
-                  <SidebarTrigger className={`h-6 w-6 absolute transition-opacity duration-200 cursor-pointer ${isLogoHovered ? 'opacity-100' : 'opacity-0'}`} />
-                </div>
+                <SidebarTrigger className="h-7 w-7 cursor-pointer" />
               </TooltipTrigger>
               <TooltipContent side="right">
-                <p>Expand menu</p>
+                <p>Toggle menu</p>
               </TooltipContent>
             </Tooltip>
           </div>
-
-          {/* Trigger button - shown when sidebar is open */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <SidebarTrigger className="h-6 w-6 group-data-[collapsible=icon]:hidden cursor-pointer" />
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Collapse menu</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent className="px-3 pt-0 pb-2 space-y-5 group-data-[collapsible=icon]:space-y-0 group-data-[collapsible=icon]:-mt-1">
-        {/* ACCOUNT Section */}
-        <div className="space-y-2 group-data-[collapsible=icon]:hidden">
-          <h2 className="text-body font-semibold text-muted-foreground uppercase tracking-wide px-1">
-            Account
-          </h2>
-          <Card className="p-3 border-none shadow-sm bg-card">
+          <Card className="p-3 border-none shadow-sm bg-card group-data-[collapsible=icon]:hidden">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 bg-foreground rounded flex items-center justify-center shrink-0">
                 <span className="text-background font-bold text-body">D</span>
