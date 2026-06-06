@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "setup": "uv sync && bun install --cwd frontend",
+    "run": "bun --cwd frontend run dev --port ${CONDUCTOR_PORT:-3000}"
+  },
+  "runScriptMode": "concurrent"
+}
