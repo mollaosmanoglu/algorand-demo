@@ -1,6 +1,6 @@
 "use client"
 
-import { Bot, ChevronDown, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bot, ChevronDown, LayoutDashboard } from 'lucide-react'
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
@@ -19,6 +19,7 @@ import {
   SidebarMenuSubItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -43,9 +44,6 @@ export function DashboardSidebar() {
         {/* ACCOUNT Section */}
         <div className="space-y-2">
           <div className="flex h-8 items-center justify-between px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-            <h2 className="text-body font-semibold uppercase tracking-wide text-muted-foreground group-data-[collapsible=icon]:hidden">
-              Account
-            </h2>
             <Tooltip>
               <TooltipTrigger asChild>
                 <SidebarTrigger className="h-7 w-7 cursor-pointer" />
@@ -54,6 +52,38 @@ export function DashboardSidebar() {
                 <p>Toggle menu</p>
               </TooltipContent>
             </Tooltip>
+            <div className="flex items-center gap-1 group-data-[collapsible=icon]:hidden">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Go back"
+                    onClick={() => window.history.back()}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Back</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Go forward"
+                    onClick={() => window.history.forward()}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Forward</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
           <Card className="p-3 border-none shadow-sm bg-card group-data-[collapsible=icon]:hidden">
             <div className="flex items-center gap-2">
