@@ -94,17 +94,17 @@ export function DashboardSidebar() {
       <SidebarContent className="px-3 pt-0 pb-2 space-y-5 group-data-[collapsible=icon]:space-y-0 group-data-[collapsible=icon]:-mt-1">
         {/* ACCOUNT Section */}
         <div className="space-y-2 group-data-[collapsible=icon]:hidden">
-          <h2 className="text-caption font-semibold text-muted-foreground uppercase tracking-wide px-1">
+          <h2 className="text-body font-semibold text-muted-foreground uppercase tracking-wide px-1">
             Account
           </h2>
           <Card className="p-3 border-none shadow-sm bg-card">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 bg-foreground rounded flex items-center justify-center shrink-0">
-                <span className="text-background font-bold text-caption">D</span>
+                <span className="text-background font-bold text-body">D</span>
               </div>
               <div className="min-w-0">
-                <div className="text-foreground font-semibold text-body truncate">Downtown Legal</div>
-                <div className="text-muted-foreground text-caption truncate">AI Secretary</div>
+                <div className="text-foreground font-semibold text-title truncate">Downtown Legal</div>
+                <div className="text-muted-foreground text-section truncate">AI Secretary</div>
               </div>
             </div>
           </Card>
@@ -112,7 +112,7 @@ export function DashboardSidebar() {
 
         {/* GENERAL Section */}
         <div className="space-y-2 group-data-[collapsible=icon]:space-y-0">
-          <h2 className="text-caption font-semibold text-muted-foreground uppercase tracking-wide px-1 group-data-[collapsible=icon]:hidden">
+          <h2 className="text-body font-semibold text-muted-foreground uppercase tracking-wide px-1 group-data-[collapsible=icon]:hidden">
             General
           </h2>
           <SidebarMenu>
@@ -126,7 +126,7 @@ export function DashboardSidebar() {
                 >
                   <Link href={item.href} className="gap-2 h-8">
                     <item.icon className="w-3.5 h-3.5" />
-                    <span className="text-body">{item.label}</span>
+                    <span className="text-title">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -135,25 +135,24 @@ export function DashboardSidebar() {
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
-                    isActive={pathname.startsWith("/agents")}
                     size="sm"
                     tooltip="Agents"
                     className="gap-2 h-8"
                   >
                     <Bot className="w-3.5 h-3.5" />
-                    <span className="text-body">Agents</span>
+                    <span className="text-title">Agents</span>
                     <ChevronDown className="ml-auto w-3.5 h-3.5 transition-transform group-data-[state=open]/collapsible:rotate-180 group-data-[collapsible=icon]:hidden" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <SidebarMenuSub className="mt-1.5 gap-1.5 px-3">
+                  <SidebarMenuSub className="mt-1.5 ml-3.5 mr-0 gap-1.5 px-0">
                     {agentItems.map((item) => (
                       <SidebarMenuSubItem key={item.slug}>
                         <SidebarMenuSubButton
                           asChild
                           size="sm"
                           isActive={pathname === "/agents" && selectedAgent === item.slug}
-                          className="h-7 text-body"
+                          className="h-8 w-full translate-x-0 pl-5 pr-2 text-title data-[size=sm]:text-title"
                         >
                           <Link href={`/agents?agent=${item.slug}`}>
                             <Bot className="w-3.5 h-3.5" />
