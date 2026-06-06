@@ -219,7 +219,7 @@ export function AgentsPage({
 
         <CollapsibleContent asChild forceMount>
           <aside className="hidden w-[360px] shrink-0 flex-col bg-card data-[state=closed]:lg:hidden lg:flex">
-            <div className="flex min-h-0 flex-[3] flex-col">
+            <div className="flex min-h-0 flex-1 flex-col">
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
                 <Tabs defaultValue="changes" className="gap-0">
                   <TabsList className="h-8 rounded-md bg-transparent p-0">
@@ -259,7 +259,7 @@ export function AgentsPage({
 
             <Separator />
 
-            <div className="flex min-h-0 flex-[2] flex-col">
+            <div className="flex min-h-0 flex-1 flex-col">
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
                 <Tabs defaultValue="run" className="gap-0">
                   <TabsList className="h-8 rounded-md bg-transparent p-0">
