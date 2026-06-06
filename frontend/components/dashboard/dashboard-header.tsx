@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { LayoutDashboard, LogOut, Phone, Search, Settings } from "lucide-react"
+import { Bot, LayoutDashboard, LogOut, Search, Settings } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -75,7 +75,7 @@ export function DashboardHeader() {
       </div>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Search calls, settings..." />
+        <CommandInput placeholder="Search agents, settings..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Navigation">
@@ -84,8 +84,8 @@ export function DashboardHeader() {
               <span>Overview</span>
             </CommandItem>
             <CommandItem onSelect={() => setOpen(false)}>
-              <Phone className="mr-2 h-4 w-4" />
-              <span>Calls</span>
+              <Bot className="mr-2 h-4 w-4" />
+              <span>Agents</span>
             </CommandItem>
           </CommandGroup>
           <CommandGroup heading="Account">

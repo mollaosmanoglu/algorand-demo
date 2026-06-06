@@ -1,10 +1,15 @@
 "use client"
 
-import { LayoutDashboard, Phone } from 'lucide-react'
+import { Bot, ChevronDown, LayoutDashboard } from 'lucide-react'
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useState } from "react"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +17,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Card } from "@/components/ui/card"
@@ -19,12 +27,19 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [isLogoHovered, setIsLogoHovered] = useState(false)
 
   const navItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/" },
-    { icon: Phone, label: "Calls", href: "/calls" },
   ]
+
+  const agentItems = [
+    { label: "Research Agent", slug: "research" },
+    { label: "E-commerce Agent", slug: "e-commerce" },
+    { label: "Insurance Agent", slug: "insurance" },
+  ]
+  const selectedAgent = searchParams.get("agent") ?? agentItems[0].slug
 
   return (
     <Sidebar collapsible="icon" className="border-r-0" style={{ '--sidebar-width': '160px', '--sidebar-width-icon': '44px' } as React.CSSProperties}>
@@ -116,6 +131,41 @@ export function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
+            <Collapsible defaultOpen asChild className="group/collapsible">
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    isActive={pathname.startsWith("/agents")}
+                    size="sm"
+                    tooltip="Agents"
+                    className="gap-1.5 h-7"
+                  >
+                    <Bot className="w-3 h-3" />
+                    <span className="text-meta">Agents</span>
+                    <ChevronDown className="ml-auto w-3 h-3 transition-transform group-data-[state=open]/collapsible:rotate-180 group-data-[collapsible=icon]:hidden" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub className="mt-1">
+                    {agentItems.map((item) => (
+                      <SidebarMenuSubItem key={item.slug}>
+                        <SidebarMenuSubButton
+                          asChild
+                          size="sm"
+                          isActive={pathname === "/agents" && selectedAgent === item.slug}
+                          className="h-6 text-meta"
+                        >
+                          <Link href={`/agents?agent=${item.slug}`}>
+                            <Bot className="w-3 h-3" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
           </SidebarMenu>
         </div>
       </SidebarContent>
