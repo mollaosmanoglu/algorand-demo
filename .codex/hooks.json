@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LUPHRA_HOOK_EVENT=PreToolUse uv run python hooks/luphra_hooks.py"
+            "command": "LUPHRA_HOOK_EVENT=PreToolUse uv run python src/hooks.py"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LUPHRA_HOOK_EVENT=PostToolUse uv run python hooks/luphra_hooks.py"
+            "command": "LUPHRA_HOOK_EVENT=PostToolUse uv run python src/hooks.py"
           }
         ]
       }

@@ -2,24 +2,29 @@
 import json
 import os
 import sys
+from typing import Any
 from urllib import request
 
 BACKEND_URL = os.getenv("LUPHRA_BACKEND_URL", "http://127.0.0.1:4021")
 
 
-def payload() -> dict:
+Payload = dict[str, Any]
+
+
+def payload() -> Payload:
     raw = sys.stdin.read()
-    return json.loads(raw) if raw.strip() else {}
+    data = json.loads(raw) if raw.strip() else {}
+    return data if isinstance(data, dict) else {}
 
 
-def field(data: dict, *names: str) -> object:
+def field(data: Payload, *names: str) -> object:
     for name in names:
         if name in data:
             return data[name]
     return None
 
 
-def tool_name(data: dict) -> str:
+def tool_name(data: Payload) -> str:
     tool = data.get("tool")
     if isinstance(tool, dict) and isinstance(tool.get("name"), str):
         return tool["name"]
@@ -27,7 +32,7 @@ def tool_name(data: dict) -> str:
     return value if isinstance(value, str) else "unknown"
 
 
-def tool_args(data: dict) -> dict:
+def tool_args(data: Payload) -> Payload:
     tool = data.get("tool")
     if isinstance(tool, dict):
         for key in ("input", "arguments", "args"):
@@ -38,7 +43,7 @@ def tool_args(data: dict) -> dict:
     return value if isinstance(value, dict) else {}
 
 
-def post(path: str, body: dict) -> dict:
+def post(path: str, body: Payload) -> Payload:
     req = request.Request(
         f"{BACKEND_URL}{path}",
         data=json.dumps(body).encode(),
@@ -46,7 +51,8 @@ def post(path: str, body: dict) -> dict:
         method="POST",
     )
     with request.urlopen(req, timeout=30) as res:
-        return json.loads(res.read().decode())
+        data = json.loads(res.read().decode())
+        return data if isinstance(data, dict) else {}
 
 
 def approve(reason: str) -> None:
@@ -59,7 +65,7 @@ def block(reason: str) -> None:
     raise SystemExit(2)
 
 
-def pre(data: dict) -> None:
+def pre(data: Payload) -> None:
     result = post(
         "/evaluate",
         {
@@ -78,7 +84,7 @@ def pre(data: dict) -> None:
     approve("allowed by Luphra")
 
 
-def post_tool(data: dict) -> None:
+def post_tool(data: Payload) -> None:
     action_id = field(data, "action_id", "actionId")
     if not isinstance(action_id, str):
         approve("no action_id supplied")
