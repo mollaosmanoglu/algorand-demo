@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import type * as React from "react"
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
@@ -20,7 +21,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
       } as React.CSSProperties}
     >
       <div className="flex h-screen w-full bg-background overflow-hidden">
-        <DashboardSidebar />
+        <Suspense fallback={null}>
+          <DashboardSidebar />
+        </Suspense>
         <SidebarInset className="bg-sidebar pl-2 flex flex-col">
           <DashboardHeader />
           <div className="bg-card rounded-tl-xl flex-1 overflow-auto relative">
