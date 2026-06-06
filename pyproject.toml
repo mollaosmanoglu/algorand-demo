@@ -5,7 +5,8 @@ description = "Per-action insurance for AI agents, paid through x402 on Algorand
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "httpx>=0.28.1",
+    "openai>=1.99.0",
+    "pydantic>=2.0.0",
     "python-dotenv>=1.1.1",
     "uvicorn[standard]>=0.35.0",
     "x402-avm[avm,fastapi,httpx]>=2.0.2",
@@ -13,6 +14,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=8.4.1",
     "pyright>=1.1.402",
     "ruff>=0.12.0",
 ]

@@ -2,9 +2,11 @@
 
 \usepackage[margin=1in]{geometry}
 \usepackage[hidelinks]{hyperref}
+\def\UrlBreaks{\do\/\do-\do\_\do.\do?\do&\do=}
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{float}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta}
 
@@ -45,10 +47,19 @@ policy, model confidence, and execution context.
 \subsection{Goals}
 
 \begin{itemize}[leftmargin=*]
-  \item Demonstrate an HTTP 402 payment flow on Algorand TestNet.
-  \item Let a Python agent automatically pay for a protected API resource.
-  \item Generate a simple quote for an agent action.
-  \item Return a coverage receipt containing the quote and settlement reference.
+  \item Observe multiple Codex agents and stream their activity into one
+  dashboard.
+  \item Display an agent sidebar, central live activity stream, agent summary,
+  and settlement panel.
+  \item Evaluate a selected existing tool call before it executes.
+  \item Allow harmless actions, deny unacceptable actions, and dynamically
+  price coverage for allowed consequential actions.
+  \item Collect the quoted premium automatically through x402 using Algorand
+  TestNet USDC.
+  \item Allow the original tool call only after coverage is confirmed.
+  \item Return and display a coverage receipt containing the quote, coverage
+  terms, and settlement reference.
+  \item Record the tool outcome and publish it to the live dashboard.
   \item Keep the implementation small enough to explain and demonstrate live.
 \end{itemize}
 
@@ -60,39 +71,61 @@ policy, model confidence, and execution context.
   \item Building a custom facilitator or operating an Algorand node.
   \item Deploying an AVM smart contract.
   \item Supporting EVM, Solana, subscriptions, or fiat checkout.
-  \item Building a complete customer dashboard.
+  \item Building custom business tools or an MCP proxy.
+  \item Intercepting every Codex built-in tool or arbitrary network request.
+  \item Building a production customer, policy-management, or claims dashboard.
 \end{itemize}
 
 \section{Design Overview}
 
-\subsection{x402 Payment Sequence}
+\subsection{Insured Tool Sequence}
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
   x=1cm,y=0.72cm,
-  participant/.style={draw,fill=gray!10,minimum width=2.5cm,minimum height=0.65cm},
+  participant/.style={draw,fill=gray!10,minimum width=1.9cm,minimum height=0.65cm},
   lifeline/.style={gray,dashed},
   message/.style={-{Latex[length=2mm]},thick},
   return/.style={-{Latex[length=2mm]},dashed}
 ]
-  \node[participant] at (0,0) {Agent client};
-  \node[participant] at (4,0) {Resource server};
-  \node[participant] at (8,0) {Facilitator};
-  \node[participant] at (12,0) {Algorand};
-  \foreach \x in {0,4,8,12} \draw[lifeline] (\x,-0.45) -- (\x,-11.2);
-  \draw[message] (0,-1.8) -- node[above]{GET /coverage} (4,-1.8);
-  \draw[return] (4,-2.8) -- node[above]{402 + requirements} (0,-2.8);
-  \draw[message] (0,-3.8) -- node[above]{GET + payment signature} (4,-3.8);
-  \draw[message] (4,-4.8) -- node[above]{POST /verify} (8,-4.8);
-  \draw[message] (8,-5.8) -- node[above]{Simulate} (12,-5.8);
-  \draw[return] (12,-6.8) -- node[above]{Simulation result} (8,-6.8);
-  \draw[return] (8,-7.8) -- node[above]{Verified} (4,-7.8);
-  \draw[message] (4,-8.8) -- node[above]{POST /settle} (8,-8.8);
-  \draw[message] (8,-9.8) -- node[above]{Submit group} (12,-9.8);
-  \draw[return] (4,-10.8) -- node[above]{200 + receipt} (0,-10.8);
+  \node[participant] at (0,0) {Agent};
+  \node[participant] at (2.5,0) {App Server};
+  \node[participant] at (5.0,0) {Hook};
+  \node[participant] at (7.5,0) {Backend};
+  \node[participant] at (10.0,0) {Facilitator};
+  \node[participant] at (12.5,0) {Algorand};
+  \node[participant] at (15.0,0) {Tool};
+  \node[participant] at (17.5,0) {Dashboard};
+  \foreach \x in {0,2.5,5.0,7.5,10.0,12.5,15.0,17.5}
+    \draw[lifeline] (\x,-0.45) -- (\x,-28.8);
+  \draw[return] (0,-1.4) -- node[above]{Activity event} (2.5,-1.4);
+  \draw[return] (2.5,-2.6) -- node[above]{JSON-RPC event} (7.5,-2.6);
+  \draw[return] (7.5,-3.8) -- node[above]{WS /events} (17.5,-3.8);
+  \draw[message] (0,-5.2) -- node[above]{Existing tool call} (5.0,-5.2);
+  \draw[message] (5.0,-6.6) -- node[above]{POST /evaluate} (7.5,-6.6);
+  \draw[return] (7.5,-7.8) -- node[above]{Allow + quote} (5.0,-7.8);
+  \draw[message] (5.0,-9.0) -- node[above]{POST /coverage/\{quote\}} (7.5,-9.0);
+  \draw[return] (7.5,-10.2) -- node[above]{402 + requirements} (5.0,-10.2);
+  \draw[message] (5.0,-11.4) -- node[above]{POST + payment} (7.5,-11.4);
+  \draw[message] (7.5,-12.8) -- node[above]{POST /verify} (10.0,-12.8);
+  \draw[message] (10.0,-14.0) -- node[above]{Simulate} (12.5,-14.0);
+  \draw[return] (12.5,-15.2) -- node[above]{Result} (10.0,-15.2);
+  \draw[return] (10.0,-16.4) -- node[above]{Verified} (7.5,-16.4);
+  \draw[message] (7.5,-17.8) -- node[above]{POST /settle} (10.0,-17.8);
+  \draw[message] (10.0,-19.0) -- node[above]{Submit} (12.5,-19.0);
+  \draw[return] (12.5,-20.2) -- node[above]{Confirmed} (10.0,-20.2);
+  \draw[return] (10.0,-21.4) -- node[above]{Settlement} (7.5,-21.4);
+  \draw[return] (7.5,-22.6) -- node[above]{Coverage receipt} (5.0,-22.6);
+  \draw[message] (5.0,-24.0) -- node[above]{Allow original call} (15.0,-24.0);
+  \draw[return] (15.0,-25.4) -- node[above]{Tool result} (0,-25.4);
+  \draw[return] (15.0,-26.6) -- node[above]{PostToolUse} (5.0,-26.6);
+  \draw[message] (5.0,-27.8) -- node[above]{POST /outcome/\{action\}} (7.5,-27.8);
+  \draw[return] (7.5,-28.8) -- node[above]{Outcome + settlement event} (17.5,-28.8);
 \end{tikzpicture}
-\caption{The HTTP 402 verification and settlement sequence.}
+}
+\caption{Continuous agent observation and hook-enforced coverage for an existing tool call.}
 \end{figure}
 
 \subsection{Component Responsibilities}
@@ -101,17 +134,30 @@ policy, model confidence, and execution context.
 \toprule
 \textbf{Component} & \textbf{Responsibility} \\
 \midrule
-Agent client &
-Requests coverage, holds the paying account, signs payment transactions, and
-retries a request after receiving HTTP 402. \\
-Luphra resource server &
-Publishes payment requirements, returns quotes and coverage receipts, and
-delegates verification and settlement. \\
-Hosted facilitator &
+Agent &
+Selects and calls an existing tool normally. \\
+App Server &
+Emits continuous thread, turn, item, command, MCP, and status events. It
+provides observability but does not price risk or enforce coverage. \\
+Hook &
+Receives \texttt{PreToolUse}, submits the pending tool name and arguments for
+coverage, pays the x402 premium, blocks on failure, and records the outcome
+through \texttt{PostToolUse}. \\
+Backend &
+Prices the proposed action, hosts the x402-protected coverage resource, returns
+coverage receipts, combines App Server, hook, and settlement events, and
+publishes the unified dashboard stream. \\
+Dashboard &
+Displays agents and continuous activity from App Server events alongside risk,
+coverage, and settlement details from the insurance path. \\
+Facilitator &
 Validates the proposed payment, optionally supplies fee abstraction, submits
 the transaction group, and reports settlement. \\
-Algorand TestNet &
+Algorand &
 Records and finalizes the USDC payment. \\
+Tool &
+Executes the original existing operation unchanged after the hook allows
+it. \\
 \bottomrule
 \end{tabularx}
 
@@ -126,7 +172,14 @@ Records and finalizes the USDC payment. \\
 \textbf{Technology} & \textbf{Use} \\
 \midrule
 Python 3.12 & Application language. \\
-FastAPI & HTTP resource server. \\
+FastAPI & Risk and coverage API, x402 resource server, and dashboard event relay. \\
+Codex Hooks & Runs synchronous \texttt{PreToolUse} and \texttt{PostToolUse}
+scripts around selected tool calls. \\
+Codex App Server & Supplies the continuous thread, turn, item, command, MCP, and
+status event stream used by the agent sidebar and live activity view. It is not
+part of insurance enforcement. \\
+Existing tool or MCP server & Performs the demonstrated action without source
+changes or a custom wrapper. \\
 GoPlausible facilitator & Hosted verification and settlement service. \\
 Algorand TestNet USDC & Demonstration payment asset. \\
 LORA & Transaction inspection and debugging. \\
@@ -142,17 +195,21 @@ LORA & Transaction inspection and debugging. \\
 \texttt{x402-avm[fastapi,avm,httpx]} &
 Provides the FastAPI payment middleware, Algorand payment mechanism, and
 automatic paying client integration. \\
-\texttt{fastapi} &
-Defines the resource-server routes and HTTP responses. \\
 \texttt{uvicorn} &
-Runs the FastAPI application as an ASGI server. \\
-\texttt{httpx} &
-Provides asynchronous HTTP requests for the paying agent client. \\
-\texttt{py-algorand-sdk} &
-Derives Algorand addresses and signs the agent's payment transactions. It is
-installed by the AVM extra. \\
+Runs the FastAPI application and supplies standard WebSocket support. \\
+\texttt{websockets} &
+Connects the Backend to Codex App Server. It is installed by
+\texttt{uvicorn[standard]}. \\
+\texttt{openai} &
+Calls a small model with structured output for the allow-or-deny decision and
+dynamic risk assessment. \\
+\texttt{pydantic} &
+Defines the structured underwriting output and validates API and dashboard
+models. It is declared directly because application code imports it. \\
 \texttt{python-dotenv} &
 Loads local configuration from the uncommitted \texttt{.env} file. \\
+\texttt{pytest} &
+Runs backend and payment-flow tests. \\
 \texttt{ruff} &
 Formats and lints the Python source. \\
 \texttt{pyright} &
@@ -160,13 +217,69 @@ Performs static type checking. \\
 \bottomrule
 \end{tabularx}
 
+FastAPI, HTTPX, and the Algorand SDK are installed transitively by the selected
+\texttt{x402-avm} extras and are not repeated as direct project dependencies.
+
 \subsubsection{Tools Not Required}
 
 AlgoKit, NodeKit, a local Algorand node, and AVM smart-contract tooling are not
 required for the initial design. They become relevant only if the project later
 introduces smart contracts, LocalNet development, or self-hosted infrastructure.
 
+\subsubsection{Research and Design Tools}
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{Tool} & \textbf{Use} \\
+\midrule
+Tavily CLI &
+Searches and extracts current technical documentation, product information, and
+supporting sources during research. \\
+Mobbin &
+Provides references for established application flows and interface patterns. \\
+Refero MCP &
+Lets the development agent search real product screens, flows, and dashboard
+patterns while designing the demonstration interface. \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{Product Interface References}
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{Product} & \textbf{Relevant Pattern} \\
+\midrule
+Conductor &
+Provides a reference for a desktop control panel that shows multiple agents,
+their activity, and items requiring attention. \\
+Clawvisor &
+Provides a reference for presenting agent risk, authorization decisions,
+policy enforcement, and an action audit trail. \\
+Allowance &
+Provides a reference for transaction approval, spending constraints, and
+scoped payment credentials for agent purchases. \\
+\bottomrule
+\end{tabularx}
+
 \subsection{Interfaces}
+
+\subsubsection{Codex Integration}
+
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+\textbf{Integration} & \textbf{Purpose} & \textbf{Interfaces Used} \\
+\midrule
+App Server &
+Observes agents and supplies live activity for the sidebar and activity view. &
+JSON-RPC input; \texttt{WS /events} output. \\
+Hooks &
+Allows or blocks selected tool calls and records their results. &
+\texttt{POST /evaluate}, \texttt{POST /coverage/\{quote\_id\}}, and
+\texttt{POST /outcome/\{action\_id\}}. \\
+\bottomrule
+\end{tabularx}
+
+App Server provides observability; hooks provide insurance enforcement.
 
 \subsubsection{HTTP API}
 
@@ -174,48 +287,103 @@ introduces smart contracts, LocalNet development, or self-hosted infrastructure.
 \toprule
 \textbf{Endpoint} & \textbf{Purpose} \\
 \midrule
-\texttt{GET /health} & Free server health check. \\
-\texttt{POST /quote} & Proposed endpoint for obtaining risk and premium terms. \\
-\texttt{GET /coverage} & Current x402-protected demonstration endpoint. \\
-\texttt{POST /coverage} & Candidate final endpoint accepting an action or quote identifier. \\
+\texttt{POST /evaluate} &
+Receives a proposed tool call. It first allows or denies the action and, only
+when allowed, returns any required risk assessment and quote. \\
+\texttt{POST /coverage/\{quote\_id\}} &
+x402-protected endpoint that activates the quoted coverage after payment. \\
+\texttt{POST /outcome/\{action\_id\}} &
+Records the existing tool's success, failure, or cancellation. \\
+\texttt{WS /events} &
+Sends an initial dashboard snapshot and then a unified stream of App Server
+activity, hook decisions, risk, coverage, settlement, and outcome events. \\
 \bottomrule
 \end{tabularx}
 
+The backend keeps the current agents, actions, quotes, receipts, outcomes, and
+aggregate statistics in memory. When the dashboard connects, the first
+WebSocket message is a complete snapshot. The sidebar and all dashboard panels
+can therefore render without separate agent or statistics routes. Subsequent
+messages contain only incremental updates.
+
 \subsubsection{Data Models}
 
-FastAPI's existing Pydantic integration will define and validate the API data
-models. The initial model set is:
+FastAPI's existing Pydantic integration will define and validate six compact
+models:
 
 \begin{itemize}[leftmargin=*]
-  \item \texttt{CoverageRequest}
-  \item \texttt{Quote}
+  \item \texttt{AgentState}
+  \item \texttt{ToolAction}
+  \item \texttt{Evaluation}, containing the policy decision, risk assessment,
+  and optional quote.
   \item \texttt{CoverageReceipt}
-  \item \texttt{SettlementReference}
+  \item \texttt{ToolOutcome}
+  \item \texttt{DashboardEvent}, including the initial snapshot variant.
 \end{itemize}
 
-Their fields will be defined when the final request, quote, payment, and receipt
-contracts are selected.
+The agent is created or refreshed automatically from the identifier and display
+name included with each evaluated tool call. No agent registration or lookup
+endpoint is required for the demonstration.
 
 \section{Alternatives Considered}
 
-\subsection{USDC versus Native ALGO}
+\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}p{0.28\textwidth}X@{}}
+\toprule
+\textbf{Decision} & \textbf{Alternatives} & \textbf{Selected Approach} \\
+\midrule
+Agent integration &
+Instructions only; custom MCP tools; MCP proxy; Codex hooks. &
+Use hooks around selected existing tools, including MCP tools where useful.
+Instructions cannot enforce coverage, while custom tools and a proxy add
+unnecessary implementation work. \\
 
-USDC is preferred because insurance premiums are naturally expressed in a
-stable unit. Native ALGO would simplify asset handling but expose the quote to
-token-price volatility.
+Agent monitoring &
+Hook events only; CLI JSONL output; polling; Codex App Server. &
+Use App Server events because hooks expose only insured calls, while the
+dashboard needs continuous multi-agent activity. \\
 
-\subsection{Fixed versus Dynamic Price}
+Insurance timing &
+Observe actions after execution; require a separate manual coverage step;
+intercept before execution. &
+Use \texttt{PreToolUse} so payment and coverage complete before the existing
+tool runs, followed by \texttt{PostToolUse} for its outcome. \\
 
-The current endpoint uses a fixed one-cent payment to validate infrastructure.
-The target product requires a dynamically calculated premium. A quote identifier
-or server-side quote store may be needed to bind the payment requirement to the
-calculated terms.
+Risk decision &
+Fixed rules; unrestricted model decision; structured model output. &
+Use a small model with validated structured output for allow, deny, risk, and
+price. The result remains explicit and displayable. \\
 
-\subsection{Ordinary Payment versus Smart Contract}
+Pricing &
+Fixed premium; subscription; dynamic per-action premium. &
+Use a dynamic premium bound to a server-side quote identifier. This directly
+demonstrates Luphra's per-action insurance model. \\
 
-An ordinary asset transfer is selected. The hosted facilitator and x402
-middleware already provide verification and settlement. A smart contract would
-add complexity without proving the core product hypothesis.
+Payment asset &
+Native ALGO; TestNet USDC. &
+Use TestNet USDC so premiums have a stable, understandable value. \\
+
+Settlement &
+Smart contract; ordinary asset transfer through a facilitator. &
+Use the facilitator and ordinary transfer. A smart contract does not improve
+the core hackathon demonstration. \\
+
+Infrastructure &
+Self-hosted facilitator and Algorand node; hosted facilitator and public
+TestNet access. &
+Use hosted infrastructure to keep the project focused on agent insurance. \\
+
+Dashboard transport &
+Separate polling routes for agents, statistics, actions, and settlements; one
+WebSocket with a snapshot and incremental events. &
+Use \texttt{WS /events}. The initial snapshot renders the complete dashboard;
+later messages update it without extra read routes. \\
+
+Dashboard scope &
+Chat interface; insurer analytics dashboard; agent control room. &
+Use an observational control room: agent list and activity in the center,
+agent summary at the top right, and coverage settlements at the bottom right. \\
+\bottomrule
+\end{tabularx}
 
 \section{Cross-Cutting Concerns}
 
@@ -226,67 +394,85 @@ add complexity without proving the core product hypothesis.
   \item Use separate payer and receiver TestNet accounts.
   \item Validate that a quote cannot be reused or paid with an altered amount.
   \item Return coverage only after successful verification and settlement.
+  \item Keep the TestNet payer key outside hook logs and tool arguments.
+  \item Fail closed when the hook cannot obtain a valid coverage receipt.
   \item Treat all facilitator and client payloads as untrusted input.
 \end{itemize}
 
 \subsection{Reliability and Error Handling}
 
-The system must distinguish an ordinary payment-required response from a failed
-verification or settlement. The client performs at most one automatic
-payment-bearing retry. Duplicate requests and ambiguous settlement outcomes
-require idempotency before the design can move beyond a demo.
+The system must distinguish an ordinary payment-required response from failed
+pricing, verification, or settlement. The hook performs at most one automatic
+payment-bearing retry and blocks the pending tool call if coverage is not
+confirmed. Duplicate hook invocations and ambiguous settlement outcomes require
+idempotency before the design can move beyond a demo.
 
 \subsection{Observability}
 
-The demonstration should display the quote identifier, payer address, premium,
-coverage limit, settlement transaction ID, and a LORA link where available.
-Private keys and complete signed payloads must never be logged.
-
-\section{Open Questions}
-
-\begin{itemize}[leftmargin=*]
-  \item Which TestNet USDC asset and funding method does the selected facilitator
-  currently support?
-  \item Does the facilitator pay transaction fees through fee abstraction?
-  \item How should a dynamic quote be passed to the payment middleware securely?
-  \item What fields make a convincing but clearly non-production coverage receipt?
-  \item Should the final demo insure API spending, tool execution, or another
-  agent action?
-  \item Which hackathon judging criteria must be demonstrated explicitly?
-\end{itemize}
+The middle dashboard panel displays normalized hook and tool events. The
+settlement panel displays the tool name, quote identifier, payer address,
+premium, coverage limit, settlement transaction ID, and a LORA link where
+available. Private keys, raw reasoning, complete tool arguments, and signed
+payloads must never be logged or sent to the browser.
 
 \section{References}
 
+\begin{sloppypar}
 \begin{enumerate}[label={[\arabic*]},leftmargin=*]
   \item 0xMihej, AI Agents Berlin, and Algorand Foundation,
   ``Algorand Builders Berlin: Agentic Commerce x402 Hackathon \$21,000+
   Prize-Pool,'' \textit{Luma}, June 6--7, 2026. Available:
-  \href{https://lu.ma/agentic-commerce-hack}{Luma event page}.
+  \url{https://lu.ma/agentic-commerce-hack}.
   Accessed: June 5, 2026.
 
   \item Algorand Foundation, ``x402 on Algorand,'' \textit{Algorand
   Developer Portal}, n.d. Available:
-  \href{https://dev.algorand.co/resources/x402-on-algorand/}
-  {Algorand Developer Portal}.
+  \url{https://dev.algorand.co/resources/x402-on-algorand/}.
   Accessed: June 5, 2026.
 
   \item GoPlausible, ``x402-avm Python FastAPI Middleware Examples,''
   \textit{GoPlausible x402-avm Documentation}, n.d. Available:
-  \href{https://github.com/GoPlausible/.github/blob/main/profile/algorand-x402-documentation/python/x402-avm-fastapi-examples-python.md}
-  {GoPlausible GitHub documentation}.
+  \url{https://github.com/GoPlausible/.github/blob/main/profile/algorand-x402-documentation/python/x402-avm-fastapi-examples-python.md}.
   Accessed: June 5, 2026.
 
   \item GoPlausible, ``x402-avm V2 AVM Mechanism Examples (Python),''
   \textit{GoPlausible x402-avm Documentation}, n.d. Available:
-  \href{https://github.com/GoPlausible/.github/blob/main/profile/algorand-x402-documentation/python/x402-avm-avm-examples-python.md}
-  {GoPlausible GitHub documentation}.
+  \url{https://github.com/GoPlausible/.github/blob/main/profile/algorand-x402-documentation/python/x402-avm-avm-examples-python.md}.
   Accessed: June 5, 2026.
 
   \item GoPlausible, ``x402-avm Python httpx Client Examples,''
   \textit{GoPlausible x402-avm Documentation}, n.d. Available:
-  \href{https://github.com/GoPlausible/.github/blob/main/profile/algorand-x402-documentation/python/x402-avm-httpx-examples-python.md}
-  {GoPlausible GitHub documentation}.
+  \url{https://github.com/GoPlausible/.github/blob/main/profile/algorand-x402-documentation/python/x402-avm-httpx-examples-python.md}.
   Accessed: June 5, 2026.
+
+  \item Algorand Foundation, ``Lora Overview,'' \textit{Algorand Developer
+  Portal}, n.d. Available:
+  \url{https://dev.algorand.co/algokit/lora/overview}.
+  Accessed: June 6, 2026.
+
+  \item Melty Labs, ``Conductor: Run a Team of Coding Agents on Your Mac,''
+  \textit{Conductor}, n.d. Available:
+  \url{https://conductor.build}.
+  Accessed: June 6, 2026.
+
+  \item Clawvisor, ``Clawvisor: The Authorization Layer for AI Agents,''
+  \textit{Y Combinator}, 2026. Available:
+  \url{https://www.ycombinator.com/companies/clawvisor}.
+  Accessed: June 6, 2026.
+
+  \item Allowance, ``Allowance: Scoped Payment Credentials for AI Agents,''
+  \textit{Y Combinator}, 2026. Available:
+  \url{https://www.ycombinator.com/companies/allowance}.
+  Accessed: June 6, 2026.
+
+  \item OpenAI, ``Codex App Server,'' \textit{OpenAI Developers}, n.d.
+  Available: \url{https://developers.openai.com/codex/app-server}.
+  Accessed: June 6, 2026.
+
+  \item OpenAI, ``Hooks,'' \textit{OpenAI Developers}, n.d.
+  Available: \url{https://developers.openai.com/codex/hooks}.
+  Accessed: June 6, 2026.
 \end{enumerate}
+\end{sloppypar}
 
 \end{document}
