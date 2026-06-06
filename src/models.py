@@ -105,6 +105,7 @@ class DashboardEventType(StrEnum):
     EVALUATION = "evaluation"
     COVERAGE = "coverage"
     OUTCOME = "outcome"
+    CODEX_ACTIVITY = "codex_activity"
 
 
 class DashboardSnapshot(BaseModel):
@@ -123,3 +124,5 @@ class DashboardEvent(BaseModel):
     quote: Quote | None = None
     receipt: CoverageReceipt | None = None
     outcome: ToolOutcome | None = None
+    codex_method: str | None = None
+    codex_params: dict[str, object] | None = None

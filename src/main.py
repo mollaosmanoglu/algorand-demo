@@ -1,4 +1,7 @@
+import asyncio
 import os
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager, suppress
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -9,9 +12,11 @@ from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
+from src import app_server
 from src import events as event_stream
 from src.models import (
     CoverageReceipt,
+    DashboardEventType,
     Decision,
     EvaluateRequest,
     EvaluateResponse,
@@ -40,7 +45,18 @@ facilitator_url = os.getenv(
     "https://facilitator.goplausible.xyz",
 )
 
-app = FastAPI(title="Luphra Agent Insurance")
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
+    task = asyncio.create_task(app_server.run())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+app = FastAPI(title="Luphra Agent Insurance", lifespan=lifespan)
 
 facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=facilitator_url))
 server = x402ResourceServer(facilitator)
@@ -105,7 +121,8 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
             rationale=assessment.rationale,
             requires_coverage=assessment.requires_coverage,
         )
-        await event_stream.publish_evaluation(
+        await event_stream.publish(
+            DashboardEventType.EVALUATION,
             action=to_dashboard_action(action),
             evaluation=response,
             quote=None,
@@ -137,7 +154,8 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         coverage_limit_usdc=quote.coverage_limit_usdc,
         expires_at=quote.expires_at,
     )
-    await event_stream.publish_evaluation(
+    await event_stream.publish(
+        DashboardEventType.EVALUATION,
         action=to_dashboard_action(action),
         evaluation=response,
         quote=quote,
@@ -153,7 +171,7 @@ async def coverage(quote_id: str) -> CoverageReceipt:
             network=ALGORAND_TESTNET_CAIP2,
             asset=COVERAGE_ASSET,
         )
-        await event_stream.publish_coverage(receipt)
+        await event_stream.publish(DashboardEventType.COVERAGE, receipt=receipt)
         return receipt
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="quote not found") from exc
@@ -169,7 +187,10 @@ async def outcome(action_id: str, request: OutcomeRequest) -> ToolOutcome:
             state=request.state,
             result_summary=request.result_summary,
         )
-        await event_stream.publish_outcome(recorded_outcome)
+        await event_stream.publish(
+            DashboardEventType.OUTCOME,
+            outcome=recorded_outcome,
+        )
         return recorded_outcome
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="action not found") from exc

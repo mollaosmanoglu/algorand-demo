@@ -20,6 +20,15 @@ OPENAI_API_KEY=<OpenAI API key>
 OPENAI_MODEL=gpt-5.4-mini
 ```
 
+Optional Codex App Server observation:
+
+```bash
+CODEX_APP_SERVER_ENABLED=true
+```
+
+When enabled, the backend starts `codex app-server`, initializes a JSONL
+connection, and forwards compact Codex notifications into `WS /events`.
+
 Run the backend:
 
 ```bash

@@ -1,17 +1,9 @@
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import WebSocket
 
-from src.models import (
-    CoverageReceipt,
-    DashboardAction,
-    DashboardEvent,
-    DashboardEventType,
-    DashboardSnapshot,
-    EvaluateResponse,
-    Quote,
-    ToolOutcome,
-)
+from src.models import DashboardEvent, DashboardEventType, DashboardSnapshot
 
 subscribers: set[WebSocket] = set()
 
@@ -32,38 +24,12 @@ def disconnect(websocket: WebSocket) -> None:
     subscribers.discard(websocket)
 
 
-async def publish_evaluation(
-    action: DashboardAction,
-    evaluation: EvaluateResponse,
-    quote: Quote | None,
-) -> None:
+async def publish(event_type: DashboardEventType, **payload: Any) -> None:
     await broadcast(
         DashboardEvent(
-            type=DashboardEventType.EVALUATION,
+            type=event_type,
             created_at=datetime.now(UTC),
-            action=action,
-            evaluation=evaluation,
-            quote=quote,
-        )
-    )
-
-
-async def publish_coverage(receipt: CoverageReceipt) -> None:
-    await broadcast(
-        DashboardEvent(
-            type=DashboardEventType.COVERAGE,
-            created_at=datetime.now(UTC),
-            receipt=receipt,
-        )
-    )
-
-
-async def publish_outcome(outcome: ToolOutcome) -> None:
-    await broadcast(
-        DashboardEvent(
-            type=DashboardEventType.OUTCOME,
-            created_at=datetime.now(UTC),
-            outcome=outcome,
+            **payload,
         )
     )
 
