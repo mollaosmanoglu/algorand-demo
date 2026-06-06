@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Decision(StrEnum):
@@ -40,3 +40,21 @@ class Quote(BaseModel):
     coverage_limit_usdc: Decimal
     expires_at: datetime
     consumed_at: datetime | None = None
+
+
+class EvaluateRequest(BaseModel):
+    agent_id: str
+    tool_name: str
+    arguments: dict[str, object] = Field(default_factory=dict)
+
+
+class EvaluateResponse(BaseModel):
+    action_id: str
+    decision: Decision
+    risk_level: RiskLevel
+    rationale: str
+    requires_coverage: bool
+    quote_id: str | None = None
+    premium_usdc: Decimal | None = None
+    coverage_limit_usdc: Decimal | None = None
+    expires_at: datetime | None = None
