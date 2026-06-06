@@ -25,3 +25,13 @@ An unpaid request to `/coverage` receives HTTP `402 Payment Required`. The x402
 client can then sign the requested payment and retry automatically.
 
 The server runs at `http://localhost:4021`.
+
+## Frontend
+
+The standalone visual dashboard is in `frontend/`. It uses local mock data and
+does not require Supabase, authentication, or backend services.
+
+```bash
+bun install --cwd frontend
+bun --cwd frontend run dev
+```
