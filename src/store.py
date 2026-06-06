@@ -2,7 +2,15 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
-from src.models import CoverageReceipt, OutcomeState, Quote, ToolAction, ToolOutcome
+from src.models import (
+    CoverageReceipt,
+    DashboardAction,
+    DashboardSnapshot,
+    OutcomeState,
+    Quote,
+    ToolAction,
+    ToolOutcome,
+)
 
 actions: dict[str, ToolAction] = {}
 quotes: dict[str, Quote] = {}
@@ -28,6 +36,40 @@ def create_action(
 
 def get_action(action_id: str) -> ToolAction:
     return actions[action_id]
+
+
+def to_dashboard_action(action: ToolAction) -> DashboardAction:
+    return DashboardAction(
+        id=action.id,
+        agent_id=action.agent_id,
+        tool_name=action.tool_name,
+        created_at=action.created_at,
+    )
+
+
+def list_dashboard_actions() -> list[DashboardAction]:
+    return [to_dashboard_action(action) for action in actions.values()]
+
+
+def list_quotes() -> list[Quote]:
+    return list(quotes.values())
+
+
+def list_receipts() -> list[CoverageReceipt]:
+    return list(receipts.values())
+
+
+def list_outcomes() -> list[ToolOutcome]:
+    return list(outcomes.values())
+
+
+def create_dashboard_snapshot() -> DashboardSnapshot:
+    return DashboardSnapshot(
+        actions=list_dashboard_actions(),
+        quotes=list_quotes(),
+        receipts=list_receipts(),
+        outcomes=list_outcomes(),
+    )
 
 
 def create_quote(

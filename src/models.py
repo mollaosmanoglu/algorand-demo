@@ -30,6 +30,13 @@ class ToolAction(BaseModel):
     created_at: datetime
 
 
+class DashboardAction(BaseModel):
+    id: str
+    agent_id: str
+    tool_name: str
+    created_at: datetime
+
+
 class RiskAssessment(BaseModel):
     decision: Decision
     risk_level: RiskLevel
@@ -91,3 +98,28 @@ class EvaluateResponse(BaseModel):
 class OutcomeRequest(BaseModel):
     state: OutcomeState
     result_summary: str | None = Field(default=None, max_length=500)
+
+
+class DashboardEventType(StrEnum):
+    SNAPSHOT = "snapshot"
+    EVALUATION = "evaluation"
+    COVERAGE = "coverage"
+    OUTCOME = "outcome"
+
+
+class DashboardSnapshot(BaseModel):
+    actions: list[DashboardAction]
+    quotes: list[Quote]
+    receipts: list[CoverageReceipt]
+    outcomes: list[ToolOutcome]
+
+
+class DashboardEvent(BaseModel):
+    type: DashboardEventType
+    created_at: datetime
+    snapshot: DashboardSnapshot | None = None
+    action: DashboardAction | None = None
+    evaluation: EvaluateResponse | None = None
+    quote: Quote | None = None
+    receipt: CoverageReceipt | None = None
+    outcome: ToolOutcome | None = None

@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 from x402.http.types import HTTPRequestContext, RouteConfig
@@ -9,6 +9,7 @@ from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
+from src.events import EventBus
 from src.models import (
     CoverageReceipt,
     Decision,
@@ -19,10 +20,12 @@ from src.models import (
 )
 from src.store import (
     create_action,
+    create_dashboard_snapshot,
     create_outcome,
     create_quote,
     create_receipt,
     get_payable_quote,
+    to_dashboard_action,
 )
 from src.underwriter import evaluate_action
 
@@ -38,6 +41,7 @@ facilitator_url = os.getenv(
 )
 
 app = FastAPI(title="Luphra Agent Insurance")
+event_bus = EventBus()
 
 facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=facilitator_url))
 server = x402ResourceServer(facilitator)
@@ -75,6 +79,16 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.websocket("/events")
+async def events(websocket: WebSocket) -> None:
+    await event_bus.connect(websocket, create_dashboard_snapshot())
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        event_bus.disconnect(websocket)
+
+
 @app.post("/evaluate")
 async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
     action = create_action(
@@ -85,13 +99,19 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
     assessment = await evaluate_action(action)
 
     if assessment.decision is Decision.DENY or not assessment.requires_coverage:
-        return EvaluateResponse(
+        response = EvaluateResponse(
             action_id=action.id,
             decision=assessment.decision,
             risk_level=assessment.risk_level,
             rationale=assessment.rationale,
             requires_coverage=assessment.requires_coverage,
         )
+        await event_bus.publish_evaluation(
+            action=to_dashboard_action(action),
+            evaluation=response,
+            quote=None,
+        )
+        return response
 
     if (
         assessment.premium_usdc is None
@@ -107,7 +127,7 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         premium_usdc=assessment.premium_usdc,
         coverage_limit_usdc=assessment.coverage_limit_usdc,
     )
-    return EvaluateResponse(
+    response = EvaluateResponse(
         action_id=action.id,
         decision=assessment.decision,
         risk_level=assessment.risk_level,
@@ -118,16 +138,24 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         coverage_limit_usdc=quote.coverage_limit_usdc,
         expires_at=quote.expires_at,
     )
+    await event_bus.publish_evaluation(
+        action=to_dashboard_action(action),
+        evaluation=response,
+        quote=quote,
+    )
+    return response
 
 
 @app.post("/coverage/{quote_id}")
 async def coverage(quote_id: str) -> CoverageReceipt:
     try:
-        return create_receipt(
+        receipt = create_receipt(
             quote_id=quote_id,
             network=ALGORAND_TESTNET_CAIP2,
             asset=COVERAGE_ASSET,
         )
+        await event_bus.publish_coverage(receipt)
+        return receipt
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="quote not found") from exc
     except ValueError as exc:
@@ -137,11 +165,13 @@ async def coverage(quote_id: str) -> CoverageReceipt:
 @app.post("/outcome/{action_id}")
 async def outcome(action_id: str, request: OutcomeRequest) -> ToolOutcome:
     try:
-        return create_outcome(
+        recorded_outcome = create_outcome(
             action_id=action_id,
             state=request.state,
             result_summary=request.result_summary,
         )
+        await event_bus.publish_outcome(recorded_outcome)
+        return recorded_outcome
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="action not found") from exc
     except ValueError as exc:
