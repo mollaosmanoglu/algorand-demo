@@ -2,10 +2,11 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
-from src.models import Quote, ToolAction
+from src.models import CoverageReceipt, Quote, ToolAction
 
 actions: dict[str, ToolAction] = {}
 quotes: dict[str, Quote] = {}
+receipts: dict[str, CoverageReceipt] = {}
 
 
 def create_action(
@@ -50,6 +51,17 @@ def get_quote(quote_id: str) -> Quote:
     return quotes[quote_id]
 
 
+def get_receipt(receipt_id: str) -> CoverageReceipt:
+    return receipts[receipt_id]
+
+
+def get_receipt_by_quote_id(quote_id: str) -> CoverageReceipt:
+    for receipt in receipts.values():
+        if receipt.quote_id == quote_id:
+            return receipt
+    raise KeyError(quote_id)
+
+
 def get_payable_quote(
     quote_id: str,
     now: datetime | None = None,
@@ -75,6 +87,38 @@ def consume_quote(
     consumed_quote = quote.model_copy(update={"consumed_at": consumed_at})
     quotes[quote_id] = consumed_quote
     return consumed_quote
+
+
+def create_receipt(
+    quote_id: str,
+    network: str,
+    asset: str,
+    payer: str | None = None,
+    settlement_transaction: str | None = None,
+    now: datetime | None = None,
+) -> CoverageReceipt:
+    try:
+        get_receipt_by_quote_id(quote_id)
+    except KeyError:
+        pass
+    else:
+        raise ValueError("coverage has already been activated")
+
+    consumed_quote = consume_quote(quote_id, now)
+    receipt = CoverageReceipt(
+        id=_new_id("receipt"),
+        action_id=consumed_quote.action_id,
+        quote_id=consumed_quote.id,
+        premium_usdc=consumed_quote.premium_usdc,
+        coverage_limit_usdc=consumed_quote.coverage_limit_usdc,
+        network=network,
+        asset=asset,
+        activated_at=consumed_quote.consumed_at or datetime.now(UTC),
+        payer=payer,
+        settlement_transaction=settlement_transaction,
+    )
+    receipts[receipt.id] = receipt
+    return receipt
 
 
 def _new_id(prefix: str) -> str:

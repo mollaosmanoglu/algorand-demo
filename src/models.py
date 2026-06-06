@@ -42,6 +42,19 @@ class Quote(BaseModel):
     consumed_at: datetime | None = None
 
 
+class CoverageReceipt(BaseModel):
+    id: str
+    action_id: str
+    quote_id: str
+    premium_usdc: Decimal
+    coverage_limit_usdc: Decimal
+    network: str
+    asset: str
+    activated_at: datetime
+    payer: str | None = None
+    settlement_transaction: str | None = None
+
+
 class EvaluateRequest(BaseModel):
     agent_id: str
     tool_name: str

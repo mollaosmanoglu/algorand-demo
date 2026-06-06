@@ -9,8 +9,8 @@ from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
-from src.models import Decision, EvaluateRequest, EvaluateResponse
-from src.store import create_action, create_quote, get_payable_quote
+from src.models import CoverageReceipt, Decision, EvaluateRequest, EvaluateResponse
+from src.store import create_action, create_quote, create_receipt, get_payable_quote
 from src.underwriter import evaluate_action
 
 # AVM Python reference:
@@ -53,6 +53,8 @@ routes = {
 }
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=server)
+
+COVERAGE_ASSET = "USDC"
 
 
 @app.get("/health")
@@ -106,9 +108,17 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
 
 
 @app.post("/coverage/{quote_id}")
-async def coverage(quote_id: str) -> dict[str, str]:
-    get_payable_quote(quote_id)
-    return {"status": "paid", "quote_id": quote_id}
+async def coverage(quote_id: str) -> CoverageReceipt:
+    try:
+        return create_receipt(
+            quote_id=quote_id,
+            network=ALGORAND_TESTNET_CAIP2,
+            asset=COVERAGE_ASSET,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="quote not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 if __name__ == "__main__":
