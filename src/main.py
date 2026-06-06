@@ -9,7 +9,7 @@ from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact import ExactAvmServerScheme
 from x402.server import x402ResourceServer
 
-from src.events import EventBus
+from src import events as event_stream
 from src.models import (
     CoverageReceipt,
     Decision,
@@ -41,7 +41,6 @@ facilitator_url = os.getenv(
 )
 
 app = FastAPI(title="Luphra Agent Insurance")
-event_bus = EventBus()
 
 facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=facilitator_url))
 server = x402ResourceServer(facilitator)
@@ -81,12 +80,12 @@ async def health() -> dict[str, str]:
 
 @app.websocket("/events")
 async def events(websocket: WebSocket) -> None:
-    await event_bus.connect(websocket, create_dashboard_snapshot())
+    await event_stream.connect(websocket, create_dashboard_snapshot())
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        event_bus.disconnect(websocket)
+        event_stream.disconnect(websocket)
 
 
 @app.post("/evaluate")
@@ -106,7 +105,7 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
             rationale=assessment.rationale,
             requires_coverage=assessment.requires_coverage,
         )
-        await event_bus.publish_evaluation(
+        await event_stream.publish_evaluation(
             action=to_dashboard_action(action),
             evaluation=response,
             quote=None,
@@ -138,7 +137,7 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         coverage_limit_usdc=quote.coverage_limit_usdc,
         expires_at=quote.expires_at,
     )
-    await event_bus.publish_evaluation(
+    await event_stream.publish_evaluation(
         action=to_dashboard_action(action),
         evaluation=response,
         quote=quote,
@@ -154,7 +153,7 @@ async def coverage(quote_id: str) -> CoverageReceipt:
             network=ALGORAND_TESTNET_CAIP2,
             asset=COVERAGE_ASSET,
         )
-        await event_bus.publish_coverage(receipt)
+        await event_stream.publish_coverage(receipt)
         return receipt
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="quote not found") from exc
@@ -170,7 +169,7 @@ async def outcome(action_id: str, request: OutcomeRequest) -> ToolOutcome:
             state=request.state,
             result_summary=request.result_summary,
         )
-        await event_bus.publish_outcome(recorded_outcome)
+        await event_stream.publish_outcome(recorded_outcome)
         return recorded_outcome
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="action not found") from exc
