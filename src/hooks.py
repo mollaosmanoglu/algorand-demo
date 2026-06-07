@@ -27,7 +27,15 @@ def field(data: Payload, *names: str) -> object:
 
 
 def call_key(data: Payload) -> str:
-    value = field(data, "tool_call_id", "toolCallId", "call_id", "callId", "id")
+    value = field(
+        data,
+        "tool_use_id",
+        "tool_call_id",
+        "toolCallId",
+        "call_id",
+        "callId",
+        "id",
+    )
     if isinstance(value, str):
         return value
     return f"{field(data, 'session_id', 'sessionId') or 'codex'}:{tool_name(data)}"
@@ -93,13 +101,12 @@ def post(path: str, body: Payload) -> Payload:
         return data if isinstance(data, dict) else {}
 
 
-def approve(reason: str) -> None:
-    print(json.dumps({"decision": "approve", "reason": reason}))
+def approve(_reason: str) -> None:
     raise SystemExit(0)
 
 
 def block(reason: str) -> None:
-    print(json.dumps({"decision": "block", "reason": reason}))
+    print(reason, file=sys.stderr)
     raise SystemExit(2)
 
 
@@ -117,13 +124,14 @@ def pre(data: Payload) -> None:
         block(result.get("rationale", "denied by Luphra"))
 
     if result.get("requires_coverage"):
-        block(
-            "coverage required before this tool "
-            f"(action_id={result.get('action_id')}, quote_id={result.get('quote_id')})"
-        )
+        quote_id = result.get("quote_id")
+        if not isinstance(quote_id, str):
+            block("coverage required but no quote was returned")
+        post(f"/pay/{quote_id}", {})
 
     remember_action(data, result.get("action_id"))
-    approve("allowed by Luphra")
+    reason = "coverage activated by Luphra" if result.get("requires_coverage") else "allowed by Luphra"
+    approve(reason)
 
 
 def post_tool(data: Payload) -> None:

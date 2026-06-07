@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LUPHRA_HOOK_EVENT=PreToolUse uv run python src/hooks.py"
+            "command": "LUPHRA_HOOK_EVENT=PreToolUse \"$(git rev-parse --show-toplevel)/.venv/bin/python\" \"$(git rev-parse --show-toplevel)/src/hooks.py\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LUPHRA_HOOK_EVENT=PostToolUse uv run python src/hooks.py"
+            "command": "LUPHRA_HOOK_EVENT=PostToolUse \"$(git rev-parse --show-toplevel)/.venv/bin/python\" \"$(git rev-parse --show-toplevel)/src/hooks.py\""
           }
         ]
       }

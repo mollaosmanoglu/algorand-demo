@@ -44,6 +44,7 @@ The server runs at `http://localhost:4021`.
 
 - `GET /health` returns backend health.
 - `POST /evaluate` evaluates a proposed tool call and may return a quote.
+- `POST /pay/{quote_id}` pays and activates a quote with the configured payer.
 - `POST /coverage/{quote_id}` is x402-protected and activates quoted coverage.
 - `POST /outcome/{action_id}` records succeeded, failed, or cancelled tool outcomes.
 - `WS /events` sends an initial snapshot, then evaluation, coverage, and outcome events.
@@ -116,16 +117,14 @@ uv run python -m websockets ws://localhost:4021/events
 Project-local Codex hooks are configured in `.codex/hooks.json` and call
 `src/hooks.py`.
 
-The current hook is intentionally minimal:
+The hook flow:
 
 - `PreToolUse` submits the pending tool call to `POST /evaluate`.
 - Denied actions are blocked.
 - Harmless allowed actions continue.
-- Covered actions fail closed with a message to run the quoted payment flow.
+- Covered actions call `POST /pay/{quote_id}` and continue after settlement.
 - `PostToolUse` records harmless-call outcomes through a small local action
   cache, or when Codex supplies an `action_id`.
-
-This does not auto-pay x402 yet.
 
 ## LORA
 

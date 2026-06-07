@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 from x402.http.types import HTTPRequestContext, RouteConfig
@@ -23,6 +23,7 @@ from src.models import (
     OutcomeRequest,
     ToolOutcome,
 )
+from src.payment import create_payment_client, pay_for_coverage
 from src.store import (
     create_action,
     create_dashboard_snapshot,
@@ -47,6 +48,10 @@ facilitator_url = os.getenv(
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
+    payer_mnemonic = os.getenv("LUPHRA_PAYER_MNEMONIC")
+    if not payer_mnemonic:
+        raise RuntimeError("LUPHRA_PAYER_MNEMONIC is not configured")
+    _app.state.payment_client = create_payment_client(payer_mnemonic)
     task = asyncio.create_task(app_server.run())
     try:
         yield
@@ -54,6 +59,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         task.cancel()
         with suppress(asyncio.CancelledError):
             await task
+        await _app.state.payment_client.aclose()
 
 
 app = FastAPI(title="Luphra Agent Insurance", lifespan=lifespan)
@@ -177,6 +183,17 @@ async def coverage(quote_id: str) -> CoverageReceipt:
         raise HTTPException(status_code=404, detail="quote not found") from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/pay/{quote_id}")
+async def pay(quote_id: str, request: Request) -> CoverageReceipt:
+    try:
+        return await pay_for_coverage(request.app.state.payment_client, quote_id)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"x402 payment failed: {exc}",
+        ) from exc
 
 
 @app.post("/outcome/{action_id}")

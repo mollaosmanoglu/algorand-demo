@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import * as React from "react"
 import {
   Bot,
@@ -378,8 +379,15 @@ export function AgentsPage({
 
               <ScrollArea className="min-h-0 flex-1">
                 <div className="px-6 py-5">
-                  <div className="grid h-36 w-full place-items-center overflow-hidden rounded-md border border-border bg-muted">
-                    <Bot className="h-16 w-16 text-muted-foreground" />
+                  <div className="grid aspect-[3/1] w-full place-items-center overflow-hidden rounded-md border border-border bg-muted">
+                    <Image
+                      src="/images/onizuka-banner.png"
+                      alt="Onizuka agent banner"
+                      width={2172}
+                      height={724}
+                      priority
+                      className="h-full w-full object-cover"
+                    />
                   </div>
 
                   <div className="mt-6 min-w-0">

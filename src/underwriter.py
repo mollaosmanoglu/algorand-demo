@@ -1,8 +1,17 @@
 import os
+from decimal import ROUND_UP, Decimal
 
 from openai import AsyncOpenAI
 
 from src.models import Decision, RiskAssessment, RiskLevel, ToolAction
+
+PREMIUM_RATES = {
+    RiskLevel.LOW: Decimal("0.000002"),
+    RiskLevel.MEDIUM: Decimal("0.000005"),
+    RiskLevel.HIGH: Decimal("0.00001"),
+}
+MINIMUM_PREMIUM_USDC = Decimal("0.000001")
+USDC_QUANTUM = Decimal("0.000001")
 
 INSTRUCTIONS = """
 You underwrite one AI agent tool action.
@@ -12,7 +21,8 @@ Return:
 - low, medium, or high risk
 - a concise rationale
 - whether insurance coverage is required
-- a premium and coverage limit in USDC when coverage is required
+- the estimated potential damage as the coverage limit in USDC when coverage is
+  required
 
 Harmless read-only actions should normally be allowed without coverage.
 Consequential actions that spend money, modify data, or communicate externally
@@ -20,9 +30,23 @@ should be allowed with coverage when their impact is bounded and their intent is
 clear. Deny destructive, malicious, irreversible, or unbounded actions.
 
 Use null for premium_usdc and coverage_limit_usdc when coverage is not required.
-Denied actions must not require coverage. For covered actions, price the premium
-between 0.1% and 5% of the coverage limit.
+Denied actions must not require coverage. For covered actions, set
+premium_usdc to 0; the application calculates the per-tool premium separately.
 """
+
+
+def price_assessment(assessment: RiskAssessment) -> RiskAssessment:
+    if not assessment.requires_coverage:
+        return assessment
+    if assessment.coverage_limit_usdc is None:
+        raise ValueError("covered action returned no coverage limit")
+
+    premium = (
+        assessment.coverage_limit_usdc * PREMIUM_RATES[assessment.risk_level]
+    ).quantize(USDC_QUANTUM, rounding=ROUND_UP)
+    return assessment.model_copy(
+        update={"premium_usdc": max(premium, MINIMUM_PREMIUM_USDC)}
+    )
 
 
 async def evaluate_action(action: ToolAction) -> RiskAssessment:
@@ -44,12 +68,7 @@ async def evaluate_action(action: ToolAction) -> RiskAssessment:
                     "coverage_limit_usdc": None,
                 }
             )
-        if assessment.requires_coverage and (
-            assessment.premium_usdc is None
-            or assessment.coverage_limit_usdc is None
-        ):
-            raise ValueError("covered action returned no price")
-        return assessment
+        return price_assessment(assessment)
     except Exception:
         return RiskAssessment(
             decision=Decision.DENY,
