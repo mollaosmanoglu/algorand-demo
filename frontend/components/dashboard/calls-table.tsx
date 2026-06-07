@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Bot, Search, ShieldCheck } from "lucide-react"
+import { Folder, Search, ShieldCheck } from "lucide-react"
+import Link from "next/link"
 
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import {
   Empty,
@@ -26,61 +26,50 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { insuranceActions, type InsuranceAction } from "@/lib/mock-data"
-
-const decisionStyles: Record<InsuranceAction["decision"], string> = {
-  Allowed: "bg-[hsl(var(--info-success-bg))] text-[hsl(var(--info-success))] border-[hsl(var(--info-success-border))]",
-  Quoted: "bg-accent text-foreground border-border",
-  Covered: "bg-[hsl(var(--info-success-bg))] text-[hsl(var(--info-success))] border-[hsl(var(--info-success-border))]",
-  Denied: "bg-[hsl(var(--info-error-bg))] text-[hsl(var(--info-error))] border-[hsl(var(--info-error-border))]",
-  Recorded: "bg-secondary text-secondary-foreground border-transparent",
-}
-
-const riskStyles: Record<InsuranceAction["risk"], string> = {
-  Low: "text-[hsl(var(--info-success))]",
-  Medium: "text-foreground",
-  High: "text-[hsl(var(--info-error))]",
-}
+import type { ProjectActivity } from "@/lib/portfolio-dashboard"
+import { programmingProjects } from "@/lib/projects"
 
 const columns = [
-  "Agent",
-  "Current action",
-  "Decision",
-  "Risk",
-  "Premium",
-  "Coverage",
-  "Settlement",
-  "Last event",
+  "Project",
+  "Agents",
+  "Actions",
+  "Paid",
+  "Denied",
+  "Covered value",
+  "Premiums",
+  "Last activity",
 ]
 
-interface CallsTableProps {
-  limit?: number
-}
-
-export function CallsTable({ limit }: CallsTableProps) {
+export function CallsTable({ projects }: { projects: ProjectActivity[] }) {
   const [globalFilter, setGlobalFilter] = React.useState("")
-  const actions = limit ? insuranceActions.slice(0, limit) : insuranceActions
-  const filteredActions = React.useMemo(() => {
+  const filteredProjects = React.useMemo(() => {
     const query = globalFilter.trim().toLowerCase()
+    if (!query) return projects
 
-    if (!query) {
-      return actions
-    }
-
-    return actions.filter((action) =>
-      Object.values(action).some((value) => value.toLowerCase().includes(query))
+    return projects.filter((project) =>
+      Object.values(project).some((value) =>
+        String(value).toLowerCase().includes(query),
+      ),
     )
-  }, [actions, globalFilter])
+  }, [globalFilter, projects])
+
+  function projectHref(projectId: string): string {
+    const project = programmingProjects.find((item) => item.id === projectId)
+    const firstAgent = project?.agents[0]
+    return firstAgent
+      ? `/agents?project=${projectId}&agent=${encodeURIComponent(firstAgent.id)}`
+      : `/agents?project=${projectId}`
+  }
 
   return (
     <Card className="p-3 bg-card border-none shadow-none">
       <div className="mb-1 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-body font-semibold text-foreground">
-            Active agent actions
+            Project activity
           </h3>
           <p className="text-meta text-muted-foreground">
-            Live coverage decisions, premiums, and settlement state.
+            Aggregated agent activity, coverage, and settlement totals by project.
           </p>
         </div>
         <InputGroup className="h-6 w-52 shrink-0 rounded-lg">
@@ -90,8 +79,8 @@ export function CallsTable({ limit }: CallsTableProps) {
             </InputGroupText>
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="Search actions..."
-            value={globalFilter ?? ""}
+            placeholder="Search projects..."
+            value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="!text-caption placeholder:text-caption"
             style={{ fontSize: "8px" }}
@@ -114,57 +103,43 @@ export function CallsTable({ limit }: CallsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredActions.length ? (
-              filteredActions.map((action) => (
+            {filteredProjects.length ? (
+              filteredProjects.map((project) => (
                 <TableRow
-                  key={action.id}
+                  key={project.id}
                   className="border-b border-border/50 hover:bg-accent"
                 >
-                  <TableCell className="py-2.5 align-top">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <Bot className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="truncate text-meta font-medium text-foreground">
-                        {action.agent}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <div className="w-[300px] whitespace-normal break-words text-meta text-muted-foreground">
-                      {action.action}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <Badge
-                      variant="outline"
-                      className={`h-5 px-1.5 text-caption font-medium ${decisionStyles[action.decision]}`}
+                  <TableCell className="py-3 align-top">
+                    <Link
+                      href={projectHref(project.id)}
+                      className="flex min-w-0 items-center gap-2 hover:underline"
                     >
-                      {action.decision}
-                    </Badge>
+                      <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate text-meta font-medium text-foreground">
+                        {project.name}
+                      </span>
+                    </Link>
                   </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <span className={`text-meta font-medium ${riskStyles[action.risk]}`}>
-                      {action.risk}
-                    </span>
+                  <TableCell className="py-3 text-meta text-muted-foreground">
+                    {project.agents}
                   </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <span className="text-meta text-muted-foreground">
-                      {action.premium}
-                    </span>
+                  <TableCell className="py-3 text-meta text-muted-foreground">
+                    {project.actions}
                   </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <span className="text-meta text-muted-foreground">
-                      {action.coverage}
-                    </span>
+                  <TableCell className="py-3 text-meta text-[hsl(var(--info-chart))]">
+                    {project.paid}
                   </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <span className="text-meta text-muted-foreground">
-                      {action.settlement}
-                    </span>
+                  <TableCell className="py-3 text-meta text-[hsl(var(--info-error))]">
+                    {project.denied}
                   </TableCell>
-                  <TableCell className="py-2.5 align-top">
-                    <span className="text-meta text-muted-foreground">
-                      {action.lastEvent}
-                    </span>
+                  <TableCell className="py-3 text-meta text-muted-foreground">
+                    {project.coveredValue}
+                  </TableCell>
+                  <TableCell className="py-3 text-meta text-muted-foreground">
+                    {project.premiums}
+                  </TableCell>
+                  <TableCell className="py-3 text-meta text-muted-foreground">
+                    {project.lastActivity}
                   </TableCell>
                 </TableRow>
               ))
@@ -176,9 +151,11 @@ export function CallsTable({ limit }: CallsTableProps) {
                       <EmptyMedia variant="icon">
                         <ShieldCheck className="h-8 w-8" />
                       </EmptyMedia>
-                      <EmptyTitle className="text-section">No actions found</EmptyTitle>
+                      <EmptyTitle className="text-section">
+                        No projects found
+                      </EmptyTitle>
                       <EmptyDescription className="text-meta">
-                        Try adjusting the action search.
+                        Try adjusting the project search.
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>

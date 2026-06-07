@@ -13,23 +13,29 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useAgentEvents } from "@/hooks/use-agent-events"
+import { derivePortfolioDashboard } from "@/lib/portfolio-dashboard"
 
-function AnalysisTabs() {
-  const [analyticsType, setAnalyticsType] = useState("coverage")
-
+function AnalysisTabs({
+  value,
+  onValueChange,
+}: {
+  value: string
+  onValueChange: (value: string) => void
+}) {
   return (
-    <Tabs value={analyticsType} onValueChange={setAnalyticsType}>
+    <Tabs value={value} onValueChange={onValueChange}>
       <AnimatedTabsList className="inline-flex gap-0 bg-transparent border-none p-0">
         <AnimatedTabsTrigger
           value="coverage"
-          isActive={analyticsType === "coverage"}
+          isActive={value === "coverage"}
           className="flex-none border-t-0 border-x-0 border-b-2 border-transparent rounded-none px-2 py-1 text-body shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus-visible:outline-none cursor-pointer"
         >
-          Coverage stream
+          Activity
         </AnimatedTabsTrigger>
         <AnimatedTabsTrigger
           value="settlements"
-          isActive={analyticsType === "settlements"}
+          isActive={value === "settlements"}
           className="flex-none border-t-0 border-x-0 border-b-2 border-transparent rounded-none px-2 py-1 text-body shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus-visible:outline-none cursor-pointer"
         >
           Settlements
@@ -40,6 +46,14 @@ function AnalysisTabs() {
 }
 
 export default function DashboardPage() {
+  const [analyticsType, setAnalyticsType] = useState("coverage")
+  const { state } = useAgentEvents()
+  const dashboard = derivePortfolioDashboard(state)
+  const projects =
+    analyticsType === "settlements"
+      ? dashboard.projects.filter((project) => project.paid > 0)
+      : dashboard.projects
+
   return (
     <DashboardShell>
       <header className="shrink-0 border-b border-border bg-card">
@@ -48,18 +62,12 @@ export default function DashboardPage() {
             <BreadcrumbList className="flex-nowrap gap-1.5 overflow-hidden text-title sm:gap-2">
               <BreadcrumbItem className="min-w-0 shrink">
                 <BreadcrumbPage className="truncate font-semibold text-muted-foreground">
-                  algorand-demo
+                  Projects
                 </BreadcrumbPage>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="shrink-0" />
               <BreadcrumbItem className="min-w-0 shrink">
                 <BreadcrumbPage className="truncate font-semibold text-muted-foreground">
-                  amsterdam
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="shrink-0" />
-              <BreadcrumbItem className="min-w-0">
-                <BreadcrumbPage className="truncate font-semibold">
                   Overview
                 </BreadcrumbPage>
               </BreadcrumbItem>
@@ -77,11 +85,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Analytics Type Tabs */}
-          <AnalysisTabs />
+          <AnalysisTabs value={analyticsType} onValueChange={setAnalyticsType} />
           <div className="mt-5 space-y-2">
-            <MetricCards />
+            <MetricCards metrics={dashboard.metrics} chartData={dashboard.chartData} />
           </div>
-          <CallsTable />
+          <CallsTable projects={projects} />
         </div>
       </div>
     </DashboardShell>

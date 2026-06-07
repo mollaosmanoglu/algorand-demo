@@ -11,7 +11,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { insuranceChartData, insuranceMetrics } from "@/lib/mock-data"
+import type {
+  PortfolioChartPoint,
+  PortfolioMetric,
+} from "@/lib/portfolio-dashboard"
 
 const chartConfigs = {
   actions: {
@@ -42,13 +45,19 @@ const chartConfigs = {
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export function MetricCards() {
-  const [selectedMetric, setSelectedMetric] = useState(insuranceMetrics[0].id)
+export function MetricCards({
+  metrics,
+  chartData,
+}: {
+  metrics: PortfolioMetric[]
+  chartData: PortfolioChartPoint[]
+}) {
+  const [selectedMetric, setSelectedMetric] = useState(metrics[0]?.id ?? "")
 
   return (
     <Tabs value={selectedMetric} onValueChange={setSelectedMetric} className="space-y-1">
       <TabsList className="w-full h-auto p-0 bg-transparent flex gap-2">
-        {insuranceMetrics.map((metric) => (
+        {metrics.map((metric) => (
             <TabsTrigger
               key={metric.id}
               value={metric.id}
@@ -72,7 +81,7 @@ export function MetricCards() {
           ))}
       </TabsList>
 
-      {insuranceMetrics.map((metric) => (
+      {metrics.map((metric) => (
         <TabsContent key={metric.id} value={metric.id} className="mt-2">
           <Card className="bg-card border-none shadow-none">
             <CardHeader className="px-3 pt-3 pb-2">
@@ -95,7 +104,7 @@ export function MetricCards() {
               >
                 <LineChart
                   accessibilityLayer
-                  data={insuranceChartData}
+                  data={chartData}
                   margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
                   key={`line-${metric.chartKey}`}
                 >

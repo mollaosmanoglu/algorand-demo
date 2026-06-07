@@ -21,17 +21,17 @@ export const programmingProjects: ProgrammingProject[] = [
     agents: [
       {
         id: "invoice-parser",
-        name: "Invoice Parser",
+        name: "Tokyo",
         description: "Extracts invoice fields",
       },
       {
         id: "vendor-checker",
-        name: "Vendor Checker",
+        name: "Berlin",
         description: "Validates vendor records",
       },
       {
         id: "payment-reviewer",
-        name: "Payment Reviewer",
+        name: "Nairobi",
         description: "Reviews outgoing payments",
       },
     ],
@@ -43,22 +43,22 @@ export const programmingProjects: ProgrammingProject[] = [
     agents: [
       {
         id: "ticket-router",
-        name: "Ticket Router",
+        name: "Lisbon",
         description: "Classifies incoming tickets",
       },
       {
         id: "response-writer",
-        name: "Response Writer",
+        name: "Seoul",
         description: "Drafts customer replies",
       },
       {
         id: "refund-reviewer",
-        name: "Refund Reviewer",
+        name: "Oslo",
         description: "Checks refund requests",
       },
       {
         id: "escalation-agent",
-        name: "Escalation Agent",
+        name: "Vienna",
         description: "Routes sensitive cases",
       },
     ],
