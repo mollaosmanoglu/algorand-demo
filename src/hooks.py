@@ -6,11 +6,8 @@ import tempfile
 from typing import Any
 from urllib import request
 
-BACKEND_URL = os.getenv("LUPHRA_BACKEND_URL", "http://127.0.0.1:4021")
-CACHE_PATH = os.getenv(
-    "LUPHRA_HOOK_CACHE",
-    os.path.join(tempfile.gettempdir(), "luphra-hook-actions.json"),
-)
+BACKEND_URL = "http://127.0.0.1:4021"
+CACHE_PATH = os.path.join(tempfile.gettempdir(), "luphra-hook-actions.json")
 
 
 Payload = dict[str, Any]

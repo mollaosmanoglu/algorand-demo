@@ -15,9 +15,8 @@ Create `.env`:
 
 ```bash
 AVM_ADDRESS=<receiver Algorand TestNet address>
-FACILITATOR_URL=https://facilitator.goplausible.xyz
 OPENAI_API_KEY=<OpenAI API key>
-OPENAI_MODEL=gpt-5.4-mini
+LUPHRA_PAYER_MNEMONIC=<payer Algorand TestNet mnemonic>
 ```
 
 Optional Codex App Server observation:
@@ -25,6 +24,10 @@ Optional Codex App Server observation:
 ```bash
 CODEX_APP_SERVER_ENABLED=true
 ```
+
+The backend defaults to `https://facilitator.goplausible.xyz` and model
+`gpt-5.4-mini`. Codex hooks call `http://127.0.0.1:4021` and store their
+temporary action cache in the system temporary directory.
 
 When enabled, the backend starts `codex app-server`, initializes a JSONL
 connection, and forwards compact Codex notifications into `WS /events`.
