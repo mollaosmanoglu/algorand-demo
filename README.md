@@ -119,7 +119,8 @@ The current hook is intentionally minimal:
 - Denied actions are blocked.
 - Harmless allowed actions continue.
 - Covered actions fail closed with a message to run the quoted payment flow.
-- `PostToolUse` records an outcome when Codex supplies an `action_id`.
+- `PostToolUse` records harmless-call outcomes through a small local action
+  cache, or when Codex supplies an `action_id`.
 
 This does not auto-pay x402 yet.
 

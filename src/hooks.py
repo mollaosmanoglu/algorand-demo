@@ -2,10 +2,15 @@
 import json
 import os
 import sys
+import tempfile
 from typing import Any
 from urllib import request
 
 BACKEND_URL = os.getenv("LUPHRA_BACKEND_URL", "http://127.0.0.1:4021")
+CACHE_PATH = os.getenv(
+    "LUPHRA_HOOK_CACHE",
+    os.path.join(tempfile.gettempdir(), "luphra-hook-actions.json"),
+)
 
 
 Payload = dict[str, Any]
@@ -22,6 +27,42 @@ def field(data: Payload, *names: str) -> object:
         if name in data:
             return data[name]
     return None
+
+
+def call_key(data: Payload) -> str:
+    value = field(data, "tool_call_id", "toolCallId", "call_id", "callId", "id")
+    if isinstance(value, str):
+        return value
+    return f"{field(data, 'session_id', 'sessionId') or 'codex'}:{tool_name(data)}"
+
+
+def load_cache() -> dict[str, str]:
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        return {}
+    return {str(key): str(value) for key, value in data.items()} if isinstance(data, dict) else {}
+
+
+def save_cache(data: dict[str, str]) -> None:
+    with open(CACHE_PATH, "w", encoding="utf-8") as file:
+        json.dump(data, file)
+
+
+def remember_action(data: Payload, action_id: object) -> None:
+    if not isinstance(action_id, str):
+        return
+    cache = load_cache()
+    cache[call_key(data)] = action_id
+    save_cache(cache)
+
+
+def pop_action(data: Payload) -> str | None:
+    cache = load_cache()
+    action_id = cache.pop(call_key(data), None)
+    save_cache(cache)
+    return action_id
 
 
 def tool_name(data: Payload) -> str:
@@ -79,15 +120,21 @@ def pre(data: Payload) -> None:
         block(result.get("rationale", "denied by Luphra"))
 
     if result.get("requires_coverage"):
-        block("coverage required; run the quoted payment flow before this tool")
+        block(
+            "coverage required before this tool "
+            f"(action_id={result.get('action_id')}, quote_id={result.get('quote_id')})"
+        )
 
+    remember_action(data, result.get("action_id"))
     approve("allowed by Luphra")
 
 
 def post_tool(data: Payload) -> None:
     action_id = field(data, "action_id", "actionId")
     if not isinstance(action_id, str):
-        approve("no action_id supplied")
+        action_id = pop_action(data)
+    if not isinstance(action_id, str):
+        approve("no evaluated action found")
 
     state = "failed" if field(data, "error", "is_error") else "succeeded"
     post(f"/outcome/{action_id}", {"state": state, "result_summary": None})

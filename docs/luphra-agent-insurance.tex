@@ -54,11 +54,11 @@ policy, model confidence, and execution context.
   \item Evaluate a selected existing tool call before it executes.
   \item Allow harmless actions, deny unacceptable actions, and dynamically
   price coverage for allowed consequential actions.
-  \item Collect the quoted premium automatically through x402 using Algorand
-  TestNet USDC.
-  \item Allow the original tool call only after coverage is confirmed.
-  \item Return and display a coverage receipt containing the quote, coverage
-  terms, and settlement reference.
+  \item Collect the quoted premium through x402 using Algorand TestNet USDC.
+  \item Block covered Codex tool calls until the quoted coverage flow has been
+  completed.
+  \item Return and display a coverage receipt containing the quote and coverage
+  terms, with a settlement reference when the middleware exposes one.
   \item Record the tool outcome and publish it to the live dashboard.
   \item Keep the implementation small enough to explain and demonstrate live.
 \end{itemize}
@@ -108,7 +108,7 @@ policy, model confidence, and execution context.
   \draw[return] (7.5,-7.8) -- node[above]{Allow + quote} (5.0,-7.8);
   \draw[message] (5.0,-9.0) -- node[above]{POST /coverage/\{quote\}} (7.5,-9.0);
   \draw[return] (7.5,-10.2) -- node[above]{402 + requirements} (5.0,-10.2);
-  \draw[message] (5.0,-11.4) -- node[above]{POST + payment} (7.5,-11.4);
+  \draw[message] (5.0,-11.4) -- node[above]{Payment-capable retry} (7.5,-11.4);
   \draw[message] (7.5,-12.8) -- node[above]{POST /verify} (10.0,-12.8);
   \draw[message] (10.0,-14.0) -- node[above]{Simulate} (12.5,-14.0);
   \draw[return] (12.5,-15.2) -- node[above]{Result} (10.0,-15.2);
@@ -141,8 +141,9 @@ Emits continuous thread, turn, item, command, MCP, and status events. It
 provides observability but does not price risk or enforce coverage. \\
 Hook &
 Receives \texttt{PreToolUse}, submits the pending tool name and arguments for
-coverage, pays the x402 premium, blocks on failure, and records the outcome
-through \texttt{PostToolUse}. \\
+coverage, allows harmless calls, blocks denied or covered calls that still need
+payment, and records harmless-call outcomes through \texttt{PostToolUse}. The
+current hook does not sign or submit x402 payments itself. \\
 Backend &
 Prices the proposed action, hosts the x402-protected coverage resource, returns
 coverage receipts, combines App Server, hook, and settlement events, and
@@ -273,7 +274,8 @@ App Server &
 Observes agents and supplies live activity for the sidebar and activity view. &
 JSON-RPC input; \texttt{WS /events} output. \\
 Hooks &
-Allows or blocks selected tool calls and records their results. &
+Allows harmless selected tool calls, blocks denied or not-yet-covered calls, and
+records results when it can correlate the tool call. &
 \texttt{POST /evaluate}, \texttt{POST /coverage/\{quote\_id\}}, and
 \texttt{POST /outcome/\{action\_id\}}. \\
 \bottomrule
@@ -308,22 +310,20 @@ messages contain only incremental updates.
 
 \subsubsection{Data Models}
 
-FastAPI's existing Pydantic integration will define and validate six compact
+FastAPI's existing Pydantic integration defines and validates compact backend
 models:
 
 \begin{itemize}[leftmargin=*]
-  \item \texttt{AgentState}
   \item \texttt{ToolAction}
-  \item \texttt{Evaluation}, containing the policy decision, risk assessment,
-  and optional quote.
+  \item \texttt{RiskAssessment} and \texttt{EvaluateResponse}, containing the
+  policy decision, risk assessment, and optional quote.
   \item \texttt{CoverageReceipt}
   \item \texttt{ToolOutcome}
   \item \texttt{DashboardEvent}, including the initial snapshot variant.
 \end{itemize}
 
-The agent is created or refreshed automatically from the identifier and display
-name included with each evaluated tool call. No agent registration or lookup
-endpoint is required for the demonstration.
+The current dashboard snapshot uses compact action records rather than a
+separate agent registration or lookup endpoint.
 
 \section{Alternatives Considered}
 
@@ -345,8 +345,9 @@ dashboard needs continuous multi-agent activity. \\
 Insurance timing &
 Observe actions after execution; require a separate manual coverage step;
 intercept before execution. &
-Use \texttt{PreToolUse} so payment and coverage complete before the existing
-tool runs, followed by \texttt{PostToolUse} for its outcome. \\
+Use \texttt{PreToolUse} so covered calls fail closed until coverage is completed,
+followed by \texttt{PostToolUse} for outcomes that can be correlated. Full
+automatic hook-side payment is deferred. \\
 
 Risk decision &
 Fixed rules; unrestricted model decision; structured model output. &
@@ -402,9 +403,10 @@ agent summary at the top right, and coverage settlements at the bottom right. \\
 \subsection{Reliability and Error Handling}
 
 The system must distinguish an ordinary payment-required response from failed
-pricing, verification, or settlement. The hook performs at most one automatic
-payment-bearing retry and blocks the pending tool call if coverage is not
-confirmed. Duplicate hook invocations and ambiguous settlement outcomes require
+pricing, verification, or settlement. The backend exposes the x402-protected
+coverage route and receipt state; the current Codex hook fails closed for
+covered calls instead of performing an automatic payment-bearing retry.
+Duplicate hook invocations and ambiguous settlement outcomes require stronger
 idempotency before the design can move beyond a demo.
 
 \subsection{Observability}
