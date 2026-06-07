@@ -33,12 +33,23 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAgentEvents } from "@/hooks/use-agent-events"
-import { formatUsdc, friendlyNetwork } from "@/lib/agent-events"
+import {
+  deriveActionRows,
+  filterAgentEventState,
+  formatUsdc,
+  friendlyNetwork,
+} from "@/lib/agent-events"
+import {
+  deriveStateLogLines,
+  mockAgentDashboards,
+} from "@/lib/mock-agent-dashboards"
 import { AgentEventTerminal } from "@/components/agents/agent-event-terminal"
 
 type AgentsPageProps = {
   agent: string
   agentName: string
+  projectId: string
+  live: boolean
   projectName: string
   workspaceName: string
 }
@@ -101,6 +112,8 @@ function AnimatedValue({
 export function AgentsPage({
   agent,
   agentName,
+  projectId,
+  live,
   projectName,
   workspaceName,
 }: AgentsPageProps) {
@@ -108,22 +121,61 @@ export function AgentsPage({
   const [settlementsOpen, setSettlementsOpen] = React.useState(true)
   const [profileTab, setProfileTab] = React.useState("profile")
   const [settlementTab, setSettlementTab] = React.useState("settlements")
-  const {
-    rows,
-    latestReceipt,
-    pendingSettlement,
-    connectionStatus,
-    logLines,
-  } = useAgentEvents()
+  const liveEvents = useAgentEvents()
+  const mockDashboard = live ? undefined : mockAgentDashboards[agent]
+  const selectedState = React.useMemo(
+    () =>
+      mockDashboard?.state ??
+      filterAgentEventState(liveEvents.state, agent),
+    [agent, liveEvents.state, mockDashboard],
+  )
+  const rows = React.useMemo(() => deriveActionRows(selectedState), [selectedState])
+  const latestReceipt = React.useMemo(
+    () =>
+      Object.values(selectedState.receipts).sort(
+        (left, right) =>
+          new Date(right.activated_at).getTime() -
+          new Date(left.activated_at).getTime(),
+      )[0] ?? null,
+    [selectedState.receipts],
+  )
+  const pendingSettlement = React.useMemo(() => {
+    const confirmedQuoteIds = new Set(
+      Object.values(selectedState.receipts).map((receipt) => receipt.quote_id),
+    )
+    return (
+      Object.values(selectedState.quotes)
+        .filter((quote) => !confirmedQuoteIds.has(quote.id))
+        .sort(
+          (left, right) =>
+            new Date(right.expires_at).getTime() -
+            new Date(left.expires_at).getTime(),
+        )[0] ?? null
+    )
+  }, [selectedState.quotes, selectedState.receipts])
+  const logLines = React.useMemo(
+    () => mockDashboard?.logs ?? deriveStateLogLines(selectedState),
+    [mockDashboard, selectedState],
+  )
+  const connectionStatus = live ? liveEvents.connectionStatus : "connected"
   const agentProfileStats = [
     {
       label: "Status",
       value: connectionStatus === "connected" ? "Running" : "Reconnecting",
     },
-    { label: "Objective", value: "Protect consequential tool calls" },
-    { label: "Policy", value: "Luphra MicroCover" },
-    { label: "Wallet", value: "19.98 USDC" },
-    { label: "Per-call limit", value: "5,000 USDC" },
+    {
+      label: "Objective",
+      value: mockDashboard?.objective ?? "Protect consequential tool calls",
+    },
+    {
+      label: "Policy",
+      value: mockDashboard?.policy ?? "Luphra MicroCover",
+    },
+    { label: "Wallet", value: mockDashboard?.wallet ?? "19.98 USDC" },
+    {
+      label: "Per-call limit",
+      value: mockDashboard?.perCallLimit ?? "5,000 USDC",
+    },
     {
       label: "Last premium",
       value: formatUsdc(latestReceipt?.premium_usdc),
@@ -142,7 +194,7 @@ export function AgentsPage({
         {
           label: "Transaction",
           value: latestReceipt.settlement_transaction ?? "Confirmed on TestNet",
-          href: latestReceipt.settlement_transaction
+          href: live && latestReceipt.settlement_transaction
             ? `https://lora.algokit.io/testnet/transaction/${latestReceipt.settlement_transaction}`
             : undefined,
         },
@@ -328,7 +380,9 @@ export function AgentsPage({
                             className="h-28 text-center text-meta text-muted-foreground"
                           >
                             {connectionStatus === "connected"
-                              ? "No agent actions yet."
+                              ? live
+                                ? "No actions for this agent yet."
+                                : `No demo actions for ${projectId}.`
                               : "Connecting to the Luphra event stream..."}
                           </TableCell>
                         </TableRow>

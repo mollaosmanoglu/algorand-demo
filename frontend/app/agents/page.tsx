@@ -25,6 +25,8 @@ export default async function AgentsRoute({ searchParams }: AgentsRouteProps) {
       <AgentsPage
         agent={selectedAgentId}
         agentName={agentName}
+        projectId={project.id}
+        live={Boolean(project.live)}
         projectName={project.name}
         workspaceName="programming"
       />

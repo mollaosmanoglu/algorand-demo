@@ -174,6 +174,45 @@ export function friendlyNetwork(network: string): string {
   return network.startsWith("algorand:") ? "Algorand TestNet" : network
 }
 
+export function filterAgentEventState(
+  state: AgentEventState,
+  agentId: string,
+): AgentEventState {
+  if (!agentId) return emptyAgentEventState
+
+  const actions = Object.fromEntries(
+    Object.entries(state.actions).filter(([, action]) => action.agent_id === agentId),
+  )
+  const actionIds = new Set(Object.keys(actions))
+  const quotes = Object.fromEntries(
+    Object.entries(state.quotes).filter(([, quote]) =>
+      actionIds.has(quote.action_id),
+    ),
+  )
+  const quoteIds = new Set(Object.keys(quotes))
+
+  return {
+    actions,
+    evaluations: Object.fromEntries(
+      Object.entries(state.evaluations).filter(([actionId]) =>
+        actionIds.has(actionId),
+      ),
+    ),
+    quotes,
+    receipts: Object.fromEntries(
+      Object.entries(state.receipts).filter(
+        ([, receipt]) =>
+          actionIds.has(receipt.action_id) || quoteIds.has(receipt.quote_id),
+      ),
+    ),
+    outcomes: Object.fromEntries(
+      Object.entries(state.outcomes).filter(([actionId]) =>
+        actionIds.has(actionId),
+      ),
+    ),
+  }
+}
+
 export function deriveActionRows(state: AgentEventState): AgentActionRow[] {
   const quotesByAction = indexBy(Object.values(state.quotes), (item) => item.action_id)
   const receiptsByAction = indexBy(
