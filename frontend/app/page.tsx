@@ -15,24 +15,24 @@ import {
 } from "@/components/ui/breadcrumb"
 
 function AnalysisTabs() {
-  const [analyticsType, setAnalyticsType] = useState("call")
+  const [analyticsType, setAnalyticsType] = useState("coverage")
 
   return (
     <Tabs value={analyticsType} onValueChange={setAnalyticsType}>
       <AnimatedTabsList className="inline-flex gap-0 bg-transparent border-none p-0">
         <AnimatedTabsTrigger
-          value="call"
-          isActive={analyticsType === "call"}
+          value="coverage"
+          isActive={analyticsType === "coverage"}
           className="flex-none border-t-0 border-x-0 border-b-2 border-transparent rounded-none px-2 py-1 text-body shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus-visible:outline-none cursor-pointer"
         >
-          Call analysis
+          Coverage stream
         </AnimatedTabsTrigger>
         <AnimatedTabsTrigger
-          value="text"
-          isActive={analyticsType === "text"}
+          value="settlements"
+          isActive={analyticsType === "settlements"}
           className="flex-none border-t-0 border-x-0 border-b-2 border-transparent rounded-none px-2 py-1 text-body shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus-visible:outline-none cursor-pointer"
         >
-          Text analysis
+          Settlements
         </AnimatedTabsTrigger>
       </AnimatedTabsList>
     </Tabs>
@@ -81,7 +81,7 @@ export default function DashboardPage() {
           <div className="mt-5 space-y-2">
             <MetricCards />
           </div>
-          <CallsTable limit={3} />
+          <CallsTable />
         </div>
       </div>
     </DashboardShell>
