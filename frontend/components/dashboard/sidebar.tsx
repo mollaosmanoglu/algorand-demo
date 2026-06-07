@@ -112,16 +112,20 @@ export function DashboardSidebar() {
             </div>
             <Separator className="-mx-3 w-[calc(100%+1.5rem)] group-data-[collapsible=icon]:hidden" />
             <Card className="p-3 border-none shadow-sm bg-card group-data-[collapsible=icon]:hidden">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-foreground rounded flex items-center justify-center shrink-0">
-                  <span className="text-background font-bold text-body">D</span>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 overflow-hidden rounded flex items-center justify-center shrink-0 bg-muted">
+                  <img
+                    src="/images/algorand-logo.webp"
+                    alt=""
+                    className="h-7 w-7 object-contain"
+                  />
                 </div>
                 <div className="min-w-0">
                   <div className="text-foreground font-semibold text-title truncate">
-                    Downtown Legal
+                    Algorand Hack
                   </div>
                   <div className="text-muted-foreground text-section truncate">
-                    AI Secretary
+                    Agent insurance
                   </div>
                 </div>
               </div>

@@ -3,10 +3,11 @@
 import * as React from "react"
 import {
   Bot,
+  ChevronDown,
+  ChevronUp,
   Clock3,
   PanelRightClose,
   PanelRightOpen,
-  Play,
   Plus,
 } from "lucide-react"
 
@@ -108,6 +109,60 @@ const traceEvents = [
     premium: "-",
     status: "Complete",
   },
+  {
+    time: "09:42:03",
+    action: "Check vendor domain age",
+    trace: "lookup -> score -> allow",
+    decision: "Allowed",
+    risk: "Low",
+    premium: "-",
+    status: "Complete",
+  },
+  {
+    time: "09:42:11",
+    action: "Increase credit order",
+    trace: "policy -> limit -> deny",
+    decision: "Denied",
+    risk: "High",
+    premium: "-",
+    status: "Blocked",
+  },
+  {
+    time: "09:42:18",
+    action: "Quote fallback vendor",
+    trace: "evaluate -> risk -> quote",
+    decision: "Quoted",
+    risk: "Medium",
+    premium: "$0.27",
+    status: "Running",
+  },
+  {
+    time: "09:42:24",
+    action: "Pay fallback coverage",
+    trace: "coverage -> x402 -> settle",
+    decision: "Covered",
+    risk: "Medium",
+    premium: "$0.27",
+    status: "Settled",
+  },
+  {
+    time: "09:42:31",
+    action: "Verify LORA reference",
+    trace: "settlement -> tx -> receipt",
+    decision: "Recorded",
+    risk: "Low",
+    premium: "-",
+    status: "Complete",
+  },
+  {
+    time: "09:42:39",
+    action: "Notify workspace",
+    trace: "outcome -> event -> dashboard",
+    decision: "Recorded",
+    risk: "Low",
+    premium: "-",
+    status: "Complete",
+  },
 ]
 
 const agentProfileStats = [
@@ -119,6 +174,17 @@ const agentProfileStats = [
   { label: "Last premium", value: "$0.91" },
 ]
 
+const settlementStats = [
+  { label: "x402", value: "Paid" },
+  { label: "Network", value: "Algorand TestNet" },
+  { label: "Asset", value: "USDC" },
+  { label: "Premium", value: "$0.91" },
+  { label: "Confirmation", value: "3.2 seconds" },
+  { label: "Transaction", value: "7F9A...2BD1" },
+  { label: "Coverage", value: "Active" },
+  { label: "Receipt", value: "COV-1042" },
+]
+
 const rightPanelTabClass =
   "h-8 px-3 text-body shadow-none data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
 
@@ -128,6 +194,7 @@ export function AgentsPage({
   workspaceName,
 }: AgentsPageProps) {
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
+  const [settlementsOpen, setSettlementsOpen] = React.useState(true)
   const agentName = agentNames[agent as keyof typeof agentNames] ?? agentNames.research
 
   return (
@@ -339,37 +406,66 @@ export function AgentsPage({
 
             <Separator />
 
-            <div className="flex min-h-0 flex-1 flex-col">
+            <div
+              className={
+                settlementsOpen
+                  ? "flex min-h-0 flex-1 flex-col"
+                  : "flex min-h-0 flex-none flex-col"
+              }
+            >
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
-                <Tabs defaultValue="run" className="gap-0">
-                  <TabsList className="h-8 rounded-md bg-transparent p-0">
-                    <TabsTrigger value="setup" className={rightPanelTabClass}>
-                      Setup
-                    </TabsTrigger>
-                    <TabsTrigger value="run" className={rightPanelTabClass}>
-                      Run
-                    </TabsTrigger>
-                    <TabsTrigger value="terminal" className={rightPanelTabClass}>
-                      Terminal
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                <Button variant="ghost" size="icon-sm" aria-label="Add run trace">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={settlementsOpen ? "Collapse settlements" : "Expand settlements"}
+                    className="shrink-0"
+                    onClick={() => setSettlementsOpen((open) => !open)}
+                  >
+                    {settlementsOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronUp className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Tabs defaultValue="settlements" className="min-w-0 gap-0">
+                    <TabsList className="h-8 rounded-md bg-transparent p-0">
+                      <TabsTrigger value="settlements" className={rightPanelTabClass}>
+                        Settlements
+                      </TabsTrigger>
+                      <TabsTrigger value="logs" className={rightPanelTabClass}>
+                        Logs
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+                <Button variant="ghost" size="icon-sm" aria-label="Add settlement">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
 
-              <div className="flex min-h-0 flex-1 items-center justify-center p-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <Button variant="outline" size="lg" className="h-11 px-5">
-                    <Play className="h-4 w-4" />
-                    Run workspace
-                  </Button>
-                  <p className="text-section text-muted-foreground">
-                    Test your live traces here.
-                  </p>
-                </div>
-              </div>
+              {settlementsOpen ? (
+                <ScrollArea className="min-h-0 flex-1">
+                  <div className="px-6 py-5">
+                    <div className="mb-5 min-w-0">
+                      <p className="truncate text-title font-semibold text-foreground">
+                        Latest settlement
+                      </p>
+                      <p className="mt-1 truncate text-caption uppercase text-muted-foreground">
+                        Coverage activated after payment
+                      </p>
+                    </div>
+                    <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
+                      {settlementStats.map((stat) => (
+                        <div key={stat.label} className="min-w-0">
+                          <dt className="truncate text-muted-foreground">{stat.label}</dt>
+                          <dd className="mt-0.5 truncate text-foreground">{stat.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                </ScrollArea>
+              ) : null}
             </div>
           </aside>
         </CollapsibleContent>
