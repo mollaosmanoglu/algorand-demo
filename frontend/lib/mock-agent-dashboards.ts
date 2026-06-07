@@ -92,6 +92,15 @@ type MockAction = {
 
 const NETWORK = "algorand:testnet"
 const ASSET = "USDC"
+const ACTION_DAY_OFFSETS = [
+  0, 0, 0, 0, 0,
+  1, 1, 1, 1,
+  2, 2, 2,
+  3, 3, 3,
+  4, 4,
+  5, 5,
+  6,
+] as const
 
 const agentScenarios: Record<
   string,
@@ -213,8 +222,19 @@ function buildDashboard(agentId: string): MockAgentDashboard {
     const actionId = `mock_${agentId}_${index + 1}`
     const quoteId = `quote_${agentId}_${index + 1}`
     const receiptId = `receipt_${agentId}_${index + 1}`
+    const dayOffset = ACTION_DAY_OFFSETS[index]
+    const sequenceOnDay = ACTION_DAY_OFFSETS
+      .slice(0, index)
+      .filter((offset) => offset === dayOffset).length
     const createdAt = new Date(
-      Date.UTC(2026, 5, 7, 9, 42 - index * 2, (index * 11) % 60),
+      Date.UTC(
+        2026,
+        5,
+        7 - dayOffset,
+        15 - sequenceOnDay,
+        (index * 17) % 60,
+        (index * 11) % 60,
+      ),
     )
     const timestamp = createdAt.toISOString()
     const covered = Boolean(item.premium && !item.denied)
