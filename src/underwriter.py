@@ -27,7 +27,9 @@ Return:
 Harmless read-only actions should normally be allowed without coverage.
 Consequential actions that spend money, modify data, or communicate externally
 should be allowed with coverage when their impact is bounded and their intent is
-clear. Deny destructive, malicious, irreversible, or unbounded actions.
+clear. A bounded email to a small, explicit recipient list is insurable when it
+contains no secrets or binding legal or financial commitment. Deny destructive,
+malicious, unbounded, mass-communication, secret-disclosing, or binding actions.
 
 Use null for premium_usdc and coverage_limit_usdc when coverage is not required.
 Denied actions must not require coverage. For covered actions, set

@@ -165,7 +165,6 @@ export function formatUsdc(value: string | null | undefined): string {
   const amount = Number(value)
   if (!Number.isFinite(amount)) return `${value} USDC`
   return `${amount.toLocaleString(undefined, {
-    minimumFractionDigits: amount < 0.01 ? 6 : 2,
     maximumFractionDigits: 6,
   })} USDC`
 }
