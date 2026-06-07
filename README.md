@@ -1,3 +1,11 @@
+<p align="center">
+  <a href="assets/demo.mp4">
+    <img src="assets/demo.gif" alt="Luphra Agent Insurance demo" width="720">
+  </a>
+</p>
+
+<p align="center"><a href="assets/demo.mp4">Watch the full demo video</a></p>
+
 # Luphra Agent Insurance
 
 FastAPI backend for per-action AI agent insurance. The backend evaluates a
