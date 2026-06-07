@@ -81,6 +81,7 @@ export type AgentActionRow = {
   premium: string
   status: string
   rationale: string | null
+  pending: boolean
 }
 
 export type AgentEventState = {
@@ -194,7 +195,7 @@ export function deriveActionRows(state: AgentEventState): AgentActionRow[] {
       let status = "Evaluating"
       if (evaluation?.decision === "deny") status = "Denied"
       else if (outcome) status = titleCase(outcome.state)
-      else if (receipt) status = "Covered"
+      else if (receipt) status = "Paid"
       else if (quote) status = "Quoted"
       else if (evaluation?.decision === "allow") status = "Allowed"
 
@@ -209,7 +210,7 @@ export function deriveActionRows(state: AgentEventState): AgentActionRow[] {
         .join(" -> ")
 
       const decision = receipt
-        ? "Covered"
+        ? "Paid"
         : quote
           ? "Quoted"
           : evaluation
@@ -226,6 +227,7 @@ export function deriveActionRows(state: AgentEventState): AgentActionRow[] {
         premium: formatUsdc(quote?.premium_usdc ?? evaluation?.premium_usdc),
         status,
         rationale: evaluation?.rationale ?? null,
+        pending: !evaluation,
       }
     })
 }

@@ -58,13 +58,37 @@ export function useAgentEvents() {
   const rows = React.useMemo(() => deriveActionRows(state), [state])
   const latestReceipt = React.useMemo(
     () =>
-      Object.values(state.receipts).sort(
-        (left, right) =>
-          new Date(right.activated_at).getTime() -
-          new Date(left.activated_at).getTime(),
-      )[0] ?? null,
+      Object.values(state.receipts)
+        .filter((receipt) => receipt.settlement_transaction)
+        .sort(
+          (left, right) =>
+            new Date(right.activated_at).getTime() -
+            new Date(left.activated_at).getTime(),
+        )[0] ?? null,
     [state.receipts],
   )
+  const pendingSettlement = React.useMemo(() => {
+    const confirmedQuoteIds = new Set(
+      Object.values(state.receipts)
+        .filter((receipt) => receipt.settlement_transaction)
+        .map((receipt) => receipt.quote_id),
+    )
+    return (
+      Object.values(state.quotes)
+        .filter((quote) => !confirmedQuoteIds.has(quote.id))
+        .sort(
+          (left, right) =>
+            new Date(right.expires_at).getTime() -
+            new Date(left.expires_at).getTime(),
+        )[0] ?? null
+    )
+  }, [state.quotes, state.receipts])
 
-  return { state, rows, latestReceipt, connectionStatus }
+  return {
+    state,
+    rows,
+    latestReceipt,
+    pendingSettlement,
+    connectionStatus,
+  }
 }

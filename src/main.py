@@ -118,6 +118,10 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         tool_name=request.tool_name,
         arguments=request.arguments,
     )
+    await event_stream.publish(
+        DashboardEventType.EVALUATION,
+        action=action,
+    )
     assessment = await evaluate_action(action)
 
     if assessment.decision is Decision.DENY or not assessment.requires_coverage:

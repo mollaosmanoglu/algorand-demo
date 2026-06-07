@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import * as React from "react"
+import { AnimatePresence, motion, MotionConfig } from "motion/react"
 import {
   Bot,
   ChevronDown,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAgentEvents } from "@/hooks/use-agent-events"
@@ -52,7 +54,7 @@ const rightPanelTabClass =
   "h-8 px-3 text-body shadow-none data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
 
 function statusStyle(status: string) {
-  if (["Evaluating", "Quoted", "Covered"].includes(status)) {
+  if (["Evaluating", "Quoted", "Paid"].includes(status)) {
     return "text-[hsl(var(--info-chart))]"
   }
   if (status === "Succeeded") return "text-[hsl(var(--info-success))]"
@@ -62,6 +64,47 @@ function statusStyle(status: string) {
   return "text-muted-foreground"
 }
 
+const revealTransition = { duration: 0.2, ease: "easeOut" as const }
+
+function AnimatedValue({
+  value,
+  pending,
+  className,
+  skeletonClassName = "h-3 w-16",
+}: {
+  value: React.ReactNode
+  pending: boolean
+  className?: string
+  skeletonClassName?: string
+}) {
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      {pending ? (
+        <motion.span
+          key="pending"
+          className="block"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={revealTransition}
+        >
+          <Skeleton className={skeletonClassName} />
+        </motion.span>
+      ) : (
+        <motion.span
+          key={String(value)}
+          className={className}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={revealTransition}
+        >
+          {value}
+        </motion.span>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export function AgentsPage({
   agent,
   projectName,
@@ -69,7 +112,12 @@ export function AgentsPage({
 }: AgentsPageProps) {
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [settlementsOpen, setSettlementsOpen] = React.useState(true)
-  const { rows, latestReceipt, connectionStatus } = useAgentEvents()
+  const {
+    rows,
+    latestReceipt,
+    pendingSettlement,
+    connectionStatus,
+  } = useAgentEvents()
   const agentName = agentNames[agent as keyof typeof agentNames] ?? agentNames.research
   const agentProfileStats = [
     {
@@ -108,11 +156,12 @@ export function AgentsPage({
     : []
 
   return (
-    <Collapsible
-      open={rightPanelOpen}
-      onOpenChange={setRightPanelOpen}
-      className="flex h-full min-h-0 flex-col bg-card text-foreground"
-    >
+    <MotionConfig reducedMotion="user">
+      <Collapsible
+        open={rightPanelOpen}
+        onOpenChange={setRightPanelOpen}
+        className="flex h-full min-h-0 flex-col bg-card text-foreground"
+      >
       <header className="shrink-0 border-b border-border bg-card">
         <div className="flex h-12 min-w-0 items-center px-5">
           <Breadcrumb className="min-w-0">
@@ -214,11 +263,15 @@ export function AgentsPage({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
+                      <AnimatePresence initial={false}>
                       {rows.map((event) => (
-                        <TableRow
+                        <motion.tr
                           key={event.id}
                           title={event.rationale ?? undefined}
-                          className="hover:bg-accent border-b border-border/50 cursor-pointer"
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={revealTransition}
+                          className="border-b border-border/50 cursor-pointer transition-colors hover:bg-accent"
                         >
                           <TableCell className="py-2.5 align-top">
                             <span className="text-meta font-medium text-foreground">
@@ -231,32 +284,47 @@ export function AgentsPage({
                             </div>
                           </TableCell>
                           <TableCell className="py-2.5 align-top">
-                            <div className="text-meta text-muted-foreground whitespace-normal break-words">
-                              {event.trace}
-                            </div>
+                            <AnimatedValue
+                              value={event.trace}
+                              pending={event.pending}
+                              className="block text-meta text-muted-foreground whitespace-normal break-words"
+                              skeletonClassName="h-3 w-28"
+                            />
                           </TableCell>
                           <TableCell className="py-2.5 align-top">
-                            <span className="text-meta text-muted-foreground">
-                              {event.decision}
-                            </span>
+                            <AnimatedValue
+                              value={event.decision}
+                              pending={event.pending}
+                              className="text-meta text-muted-foreground"
+                            />
                           </TableCell>
                           <TableCell className="py-2.5 align-top">
-                            <span className="text-meta text-muted-foreground">
-                              {event.risk}
-                            </span>
+                            <AnimatedValue
+                              value={event.risk}
+                              pending={event.pending}
+                              className="text-meta text-muted-foreground"
+                              skeletonClassName="h-3 w-10"
+                            />
                           </TableCell>
                           <TableCell className="py-2.5 align-top">
-                            <span className="text-meta text-muted-foreground">
-                              {event.premium}
-                            </span>
+                            <AnimatedValue
+                              value={event.premium}
+                              pending={event.pending}
+                              className="text-meta text-muted-foreground"
+                              skeletonClassName="h-3 w-14"
+                            />
                           </TableCell>
                           <TableCell className="py-2.5 align-top">
-                            <span className={`text-meta font-medium ${statusStyle(event.status)}`}>
-                              {event.status}
-                            </span>
+                            <AnimatedValue
+                              value={event.status}
+                              pending={false}
+                              className={`text-meta font-medium ${statusStyle(event.status)}`}
+                              skeletonClassName="h-3 w-14"
+                            />
                           </TableCell>
-                        </TableRow>
+                        </motion.tr>
                       ))}
+                      </AnimatePresence>
                       {rows.length === 0 ? (
                         <TableRow>
                           <TableCell
@@ -379,18 +447,59 @@ export function AgentsPage({
                   <div className="px-6 py-5">
                     <div className="mb-5 min-w-0">
                       <p className="truncate text-title font-semibold text-foreground">
-                        {latestReceipt ? "Latest settlement" : "No settlements yet"}
+                        {pendingSettlement
+                          ? "Settlement pending"
+                          : latestReceipt
+                            ? "Latest settlement"
+                            : "No settlements yet"}
                       </p>
                       <p className="mt-1 truncate text-caption uppercase text-muted-foreground">
-                        {latestReceipt
+                        {pendingSettlement
+                          ? "Waiting for x402 confirmation"
+                          : latestReceipt
                           ? "Coverage activated after payment"
                           : "Covered tool calls will appear here"}
                       </p>
                     </div>
-                    {latestReceipt ? (
+                    {pendingSettlement ? (
+                      <motion.dl
+                        key={pendingSettlement.id}
+                        className="grid grid-cols-2 gap-x-12 gap-y-5 text-title"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={revealTransition}
+                      >
+                        {[
+                          ["x402", "w-10"],
+                          ["Network", "w-24"],
+                          ["Asset", "w-12"],
+                          ["Premium", "w-20"],
+                          ["Coverage", "w-16"],
+                          ["Transaction", "w-28"],
+                          ["Status", "w-14"],
+                          ["Receipt", "w-24"],
+                        ].map(([label, width]) => (
+                          <div key={label} className="min-w-0">
+                            <dt className="truncate text-muted-foreground">{label}</dt>
+                            <dd className="mt-1">
+                              <Skeleton className={`h-3 ${width}`} />
+                            </dd>
+                          </div>
+                        ))}
+                      </motion.dl>
+                    ) : latestReceipt ? (
                       <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
                         {settlementStats.map((stat) => (
-                          <div key={stat.label} className="min-w-0">
+                          <motion.div
+                            key={`${latestReceipt.id}-${stat.label}`}
+                            className="min-w-0"
+                            initial={{ opacity: 0, y: 3 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              ...revealTransition,
+                              delay: settlementStats.indexOf(stat) * 0.025,
+                            }}
+                          >
                             <dt className="truncate text-muted-foreground">{stat.label}</dt>
                             <dd className="mt-0.5 truncate text-foreground">
                               {stat.href ? (
@@ -407,7 +516,7 @@ export function AgentsPage({
                                 stat.value
                               )}
                             </dd>
-                          </div>
+                          </motion.div>
                         ))}
                       </dl>
                     ) : (
@@ -422,6 +531,7 @@ export function AgentsPage({
           </aside>
         </CollapsibleContent>
       </div>
-    </Collapsible>
+      </Collapsible>
+    </MotionConfig>
   )
 }
