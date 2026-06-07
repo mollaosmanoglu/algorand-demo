@@ -6,6 +6,13 @@ import { CallsTable } from "@/components/dashboard/calls-table"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { Tabs } from "@/components/ui/tabs"
 import { AnimatedTabsList, AnimatedTabsTrigger } from "@/components/ui/animated-tabs"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 function AnalysisTabs() {
   const [analyticsType, setAnalyticsType] = useState("call")
@@ -35,11 +42,37 @@ function AnalysisTabs() {
 export default function DashboardPage() {
   return (
     <DashboardShell>
-      <div className="px-12 pt-14 pb-3 space-y-3">
+      <header className="shrink-0 border-b border-border bg-card">
+        <div className="flex h-12 min-w-0 items-center px-5">
+          <Breadcrumb className="min-w-0">
+            <BreadcrumbList className="flex-nowrap gap-1.5 overflow-hidden text-title sm:gap-2">
+              <BreadcrumbItem className="min-w-0 shrink">
+                <BreadcrumbPage className="truncate font-semibold text-muted-foreground">
+                  algorand-demo
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="shrink-0" />
+              <BreadcrumbItem className="min-w-0 shrink">
+                <BreadcrumbPage className="truncate font-semibold text-muted-foreground">
+                  amsterdam
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="shrink-0" />
+              <BreadcrumbItem className="min-w-0">
+                <BreadcrumbPage className="truncate font-semibold">
+                  Overview
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+
+      <div className="px-12 pt-5 pb-3 space-y-3">
         <div className="space-y-2">
-          <div className="pb-4 pt-2">
+          <div className="pb-4 pt-4">
             <h2 className="text-hero font-semibold text-foreground">
-              Good morning
+              Good Morning, Faruk
             </h2>
           </div>
 

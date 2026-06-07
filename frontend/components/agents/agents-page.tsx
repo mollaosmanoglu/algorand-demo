@@ -3,20 +3,15 @@
 import * as React from "react"
 import {
   Bot,
-  Check,
   Clock3,
-  Code2,
   PanelRightClose,
   PanelRightOpen,
   Eye,
   FileText,
   Play,
   Plus,
-  Terminal,
-  Wrench,
 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,6 +28,7 @@ import {
 } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type AgentsPageProps = {
@@ -49,39 +45,67 @@ const agentNames = {
 
 const traceEvents = [
   {
-    icon: Terminal,
-    label: "Shell",
-    title: "git status --short --branch",
-    detail: "Checked workspace state before editing.",
-    time: "12s",
+    time: "09:41:12",
+    action: "Prepare vendor purchase",
+    trace: "evaluate -> quote -> coverage",
+    decision: "Quoted",
+    risk: "Medium",
+    premium: "$0.42",
+    status: "Running",
   },
   {
-    icon: FileText,
-    label: "Read",
-    title: "frontend/app/globals.css",
-    detail: "Loaded neutral tokens, typography scale, and sidebar variables.",
-    time: "18s",
+    time: "09:41:15",
+    action: "Read vendor terms",
+    trace: "read -> classify -> allow",
+    decision: "Allowed",
+    risk: "Low",
+    premium: "-",
+    status: "Complete",
   },
   {
-    icon: Wrench,
-    label: "Tool",
-    title: "evaluate_action",
-    detail: "Requested coverage for a bounded frontend update.",
-    time: "24s",
+    time: "09:41:18",
+    action: "Evaluate tool call",
+    trace: "policy -> risk -> price",
+    decision: "Quoted",
+    risk: "Medium",
+    premium: "$0.38",
+    status: "Running",
   },
   {
-    icon: Code2,
-    label: "Edit",
-    title: "components/agents/agents-page.tsx",
-    detail: "Prepared live trace workspace layout using shadcn primitives.",
-    time: "31s",
+    time: "09:41:22",
+    action: "Request API credits",
+    trace: "coverage -> x402 -> settle",
+    decision: "Covered",
+    risk: "High",
+    premium: "$0.91",
+    status: "Settled",
   },
   {
-    icon: Check,
-    label: "Verify",
-    title: "eslint scoped check",
-    detail: "Queued lint verification for changed UI components.",
-    time: "46s",
+    time: "09:41:29",
+    action: "Confirm receipt",
+    trace: "settlement -> receipt -> allow",
+    decision: "Covered",
+    risk: "Medium",
+    premium: "$0.42",
+    status: "Complete",
+  },
+  {
+    time: "09:41:36",
+    action: "Run original tool",
+    trace: "allow -> execute -> outcome",
+    decision: "Allowed",
+    risk: "Low",
+    premium: "-",
+    status: "Running",
+  },
+  {
+    time: "09:41:44",
+    action: "Publish outcome",
+    trace: "post-tool -> outcome -> dashboard",
+    decision: "Recorded",
+    risk: "Low",
+    premium: "-",
+    status: "Complete",
   },
 ]
 
@@ -108,7 +132,7 @@ export function AgentsPage({
       className="flex h-full min-h-0 flex-col bg-card text-foreground"
     >
       <header className="shrink-0 border-b border-border bg-card">
-        <div className="flex h-12 min-w-0 items-center justify-between gap-3 px-5">
+        <div className="flex h-12 min-w-0 items-center px-5">
           <Breadcrumb className="min-w-0">
             <BreadcrumbList className="flex-nowrap gap-1.5 overflow-hidden text-title sm:gap-2">
               <BreadcrumbItem className="min-w-0 shrink">
@@ -130,9 +154,6 @@ export function AgentsPage({
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <span className="shrink-0 text-caption text-muted-foreground">
-            Live traces
-          </span>
         </div>
       </header>
 
@@ -181,38 +202,82 @@ export function AgentsPage({
           </div>
 
           <ScrollArea className="min-h-0 flex-1">
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-8 py-8">
-              <div className="flex justify-end">
-                <Card className="max-w-xl rounded-lg border-none bg-sidebar-accent px-5 py-4 shadow-none">
-                  <p className="text-title font-medium">
-                    Run this agent and stream tool calls, file edits, and checks.
-                  </p>
-                </Card>
-              </div>
-
-              <div className="space-y-3">
-                {traceEvents.map((event) => (
-                  <div key={`${event.label}-${event.title}`} className="group flex gap-3">
-                    <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-card">
-                      <event.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1 rounded-md px-2 py-1.5 group-hover:bg-sidebar-accent">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-title font-medium">{event.title}</p>
-                        <Badge variant="outline" className="rounded-md text-caption">
-                          {event.label}
-                        </Badge>
-                        <span className="ml-auto text-caption text-muted-foreground">
-                          {event.time}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-section text-muted-foreground">
-                        {event.detail}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="flex w-full flex-col px-3 pt-3">
+              <Card className="p-0 bg-card border-none shadow-none">
+                <div className="w-full overflow-x-auto">
+                  <Table className="table-fixed">
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="w-[11%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Time
+                        </TableHead>
+                        <TableHead className="w-[22%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Action
+                        </TableHead>
+                        <TableHead className="w-[27%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Trace
+                        </TableHead>
+                        <TableHead className="w-[13%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Decision
+                        </TableHead>
+                        <TableHead className="w-[9%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Risk
+                        </TableHead>
+                        <TableHead className="w-[9%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Premium
+                        </TableHead>
+                        <TableHead className="w-[9%] text-muted-foreground font-medium text-caption uppercase tracking-wide h-6 py-2">
+                          Status
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {traceEvents.map((event) => (
+                        <TableRow
+                          key={`${event.time}-${event.action}`}
+                          className="hover:bg-accent border-b border-border/50 cursor-pointer"
+                        >
+                          <TableCell className="py-2.5 align-top">
+                            <span className="text-meta font-medium text-foreground">
+                              {event.time}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2.5 align-top">
+                            <div className="text-meta font-medium text-foreground whitespace-normal break-words">
+                              {event.action}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-2.5 align-top">
+                            <div className="text-meta text-muted-foreground whitespace-normal break-words">
+                              {event.trace}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-2.5 align-top">
+                            <span className="text-meta text-muted-foreground">
+                              {event.decision}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2.5 align-top">
+                            <span className="text-meta text-muted-foreground">
+                              {event.risk}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2.5 align-top">
+                            <span className="text-meta text-muted-foreground">
+                              {event.premium}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-2.5 align-top">
+                            <span className="text-meta text-muted-foreground">
+                              {event.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
             </div>
           </ScrollArea>
         </section>
