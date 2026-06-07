@@ -87,6 +87,9 @@ export function AgentsPage({
         {
           label: "Transaction",
           value: latestReceipt.settlement_transaction ?? "Confirmed on TestNet",
+          href: latestReceipt.settlement_transaction
+            ? `https://lora.algokit.io/testnet/transaction/${latestReceipt.settlement_transaction}`
+            : undefined,
         },
         { label: "Status", value: "Active" },
         { label: "Receipt", value: latestReceipt.id },
@@ -126,7 +129,7 @@ export function AgentsPage({
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <section className="flex min-w-0 flex-1 flex-col border-r border-border">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col border-r border-border">
           <div className="flex h-12 shrink-0 min-w-0 items-stretch justify-between gap-3 border-b border-border px-5">
             <div className="flex min-w-0 items-stretch">
               <Tabs value={agent} className="min-w-0 gap-0">
@@ -378,7 +381,21 @@ export function AgentsPage({
                         {settlementStats.map((stat) => (
                           <div key={stat.label} className="min-w-0">
                             <dt className="truncate text-muted-foreground">{stat.label}</dt>
-                            <dd className="mt-0.5 truncate text-foreground">{stat.value}</dd>
+                            <dd className="mt-0.5 truncate text-foreground">
+                              {stat.href ? (
+                                <a
+                                  href={stat.href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="underline underline-offset-2 hover:text-primary"
+                                  title={stat.value}
+                                >
+                                  {stat.value}
+                                </a>
+                              ) : (
+                                stat.value
+                              )}
+                            </dd>
                           </div>
                         ))}
                       </dl>

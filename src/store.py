@@ -107,6 +107,11 @@ def get_receipt_by_action_id(action_id: str) -> CoverageReceipt:
     raise KeyError(action_id)
 
 
+def save_receipt(receipt: CoverageReceipt) -> CoverageReceipt:
+    receipts[receipt.id] = receipt
+    return receipt
+
+
 def get_outcome(outcome_id: str) -> ToolOutcome:
     return outcomes[outcome_id]
 

@@ -32,6 +32,7 @@ from src.store import (
     create_receipt,
     get_payable_quote,
     save_evaluation,
+    save_receipt,
 )
 from src.underwriter import evaluate_action
 
@@ -190,7 +191,16 @@ async def coverage(quote_id: str) -> CoverageReceipt:
 @app.post("/pay/{quote_id}")
 async def pay(quote_id: str, request: Request) -> CoverageReceipt:
     try:
-        return await pay_for_coverage(request.app.state.payment_client, quote_id)
+        receipt = await pay_for_coverage(
+            request.app.state.payment_client,
+            quote_id,
+        )
+        save_receipt(receipt)
+        await event_stream.publish(
+            DashboardEventType.COVERAGE,
+            receipt=receipt,
+        )
+        return receipt
     except Exception as exc:
         raise HTTPException(
             status_code=502,

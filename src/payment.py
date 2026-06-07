@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import algosdk
 from algosdk import account, mnemonic
 from x402 import x402Client
+from x402.http import decode_payment_response_header
 from x402.http.clients.httpx import x402HttpxClient
 from x402.mechanisms.avm import ALGORAND_TESTNET_CAIP2
 from x402.mechanisms.avm.exact.register import register_exact_avm_client
@@ -63,4 +64,18 @@ async def pay_for_coverage(
         raise RuntimeError(
             f"coverage request returned {response.status_code}: {detail}"
         )
-    return CoverageReceipt.model_validate(response.json())
+
+    receipt = CoverageReceipt.model_validate(response.json())
+    payment_response = response.headers.get(
+        "payment-response"
+    ) or response.headers.get("x-payment-response")
+    if not payment_response:
+        return receipt
+
+    settlement = decode_payment_response_header(payment_response)
+    return receipt.model_copy(
+        update={
+            "payer": settlement.payer,
+            "settlement_transaction": settlement.transaction,
+        }
+    )
