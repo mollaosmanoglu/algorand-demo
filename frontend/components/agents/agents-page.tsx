@@ -6,8 +6,6 @@ import {
   Clock3,
   PanelRightClose,
   PanelRightOpen,
-  Eye,
-  FileText,
   Play,
   Plus,
 } from "lucide-react"
@@ -112,13 +110,17 @@ const traceEvents = [
   },
 ]
 
-const reviewFiles = [
-  { path: "frontend/app/agents/page.tsx", delta: "+18" },
-  { path: "frontend/app/page.tsx", delta: "+16 -32" },
-  { path: "frontend/components/agents/agents-page.tsx", delta: "+92 -3" },
-  { path: "frontend/components/dashboard/sidebar.tsx", delta: "+72 -23" },
-  { path: "frontend/components/dashboard/dashboard-shell.tsx", delta: "+33" },
+const agentProfileStats = [
+  { label: "Status", value: "Running" },
+  { label: "Objective", value: "Maintain API credits" },
+  { label: "Policy", value: "Standard" },
+  { label: "Wallet", value: "48.20 USDC" },
+  { label: "Daily limit", value: "EUR 1,000" },
+  { label: "Last premium", value: "$0.91" },
 ]
+
+const rightPanelTabClass =
+  "h-8 px-3 text-body shadow-none data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
 
 export function AgentsPage({
   agent,
@@ -289,38 +291,48 @@ export function AgentsPage({
           <aside className="hidden w-[min(46vw,560px)] min-w-[430px] shrink-0 flex-col bg-card data-[state=closed]:lg:hidden lg:flex">
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
-                <Tabs defaultValue="changes" className="gap-0">
+                <Tabs defaultValue="profile" className="gap-0">
                   <TabsList className="h-8 rounded-md bg-transparent p-0">
-                    <TabsTrigger value="all" className="h-8 px-3 text-body shadow-none">
-                      All traces
+                    <TabsTrigger value="profile" className={rightPanelTabClass}>
+                      Profile
                     </TabsTrigger>
-                    <TabsTrigger value="changes" className="h-8 px-3 text-body shadow-none">
-                      Changes
+                    <TabsTrigger value="policy" className={rightPanelTabClass}>
+                      Policy
                     </TabsTrigger>
-                    <TabsTrigger value="checks" className="h-8 px-3 text-body shadow-none">
+                    <TabsTrigger value="checks" className={rightPanelTabClass}>
                       Checks
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <Button variant="ghost" size="icon-sm" aria-label="Review traces">
-                  <Eye className="h-4 w-4" />
+                <Button variant="ghost" size="icon-sm" aria-label="Add profile trace">
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
 
               <ScrollArea className="min-h-0 flex-1">
-                <div className="space-y-1 px-4 py-5">
-                  {reviewFiles.map((file) => (
-                    <div
-                      key={file.path}
-                      className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-sidebar-accent"
-                    >
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 flex-1 truncate text-title">{file.path}</span>
-                      <span className="shrink-0 text-section font-medium text-muted-foreground">
-                        {file.delta}
-                      </span>
+                <div className="px-6 py-5">
+                  <div className="grid h-36 w-full place-items-center overflow-hidden rounded-md border border-border bg-muted">
+                    <Bot className="h-16 w-16 text-muted-foreground" />
+                  </div>
+
+                  <div className="mt-6 min-w-0">
+                    <div className="mb-5 min-w-0">
+                      <p className="truncate text-title font-semibold text-foreground">
+                        {agentName}
+                      </p>
+                      <p className="mt-1 truncate text-caption uppercase text-muted-foreground">
+                        Luphra MicroCover
+                      </p>
                     </div>
-                  ))}
+                    <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
+                      {agentProfileStats.map((stat) => (
+                        <div key={stat.label} className="min-w-0">
+                          <dt className="truncate text-muted-foreground">{stat.label}</dt>
+                          <dd className="mt-0.5 truncate text-foreground">{stat.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
                 </div>
               </ScrollArea>
             </div>
@@ -331,13 +343,13 @@ export function AgentsPage({
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
                 <Tabs defaultValue="run" className="gap-0">
                   <TabsList className="h-8 rounded-md bg-transparent p-0">
-                    <TabsTrigger value="setup" className="h-8 px-3 text-body shadow-none">
+                    <TabsTrigger value="setup" className={rightPanelTabClass}>
                       Setup
                     </TabsTrigger>
-                    <TabsTrigger value="run" className="h-8 px-3 text-body shadow-none">
+                    <TabsTrigger value="run" className={rightPanelTabClass}>
                       Run
                     </TabsTrigger>
-                    <TabsTrigger value="terminal" className="h-8 px-3 text-body shadow-none">
+                    <TabsTrigger value="terminal" className={rightPanelTabClass}>
                       Terminal
                     </TabsTrigger>
                   </TabsList>
