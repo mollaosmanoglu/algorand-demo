@@ -47,6 +47,9 @@ export function DashboardSidebar() {
     { label: "Research Agent", slug: "research" },
     { label: "E-commerce Agent", slug: "e-commerce" },
     { label: "Insurance Agent", slug: "insurance" },
+    { label: "Procurement Agent", slug: "procurement" },
+    { label: "Risk Analyst Agent", slug: "risk-analyst" },
+    { label: "Settlement Agent", slug: "settlement" },
   ];
   const selectedAgent = searchParams.get("agent") ?? agentItems[0].slug;
 

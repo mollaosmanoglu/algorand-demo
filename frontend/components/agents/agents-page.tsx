@@ -41,6 +41,9 @@ const agentNames = {
   research: "Research Agent",
   "e-commerce": "E-commerce Agent",
   insurance: "Insurance Agent",
+  procurement: "Procurement Agent",
+  "risk-analyst": "Risk Analyst Agent",
+  settlement: "Settlement Agent",
 }
 
 const traceEvents = [

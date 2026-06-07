@@ -86,3 +86,149 @@ export const hourlyChartData = [
   { hour: "16:00", calls: 6 },
   { hour: "18:00", calls: 2 },
 ]
+
+export type InsuranceMetric = {
+  id: string
+  label: string
+  value: string
+  suffix: string
+  description: string
+  chartKey: "actions" | "value" | "premium" | "settlements"
+}
+
+export type InsuranceAction = {
+  id: string
+  agent: string
+  action: string
+  decision: "Allowed" | "Quoted" | "Covered" | "Denied" | "Recorded"
+  risk: "Low" | "Medium" | "High"
+  premium: string
+  coverage: string
+  settlement: string
+  lastEvent: string
+}
+
+export const insuranceMetrics: InsuranceMetric[] = [
+  {
+    id: "active_agents",
+    label: "Active agents",
+    value: "6",
+    suffix: "",
+    description: "Agents currently streaming activity into the control room",
+    chartKey: "actions",
+  },
+  {
+    id: "actions_evaluated",
+    label: "Actions evaluated",
+    value: "14",
+    suffix: "",
+    description: "Tool calls priced, allowed, denied, or recorded today",
+    chartKey: "actions",
+  },
+  {
+    id: "covered_value",
+    label: "Covered value",
+    value: "$4.8",
+    suffix: "k",
+    description: "Economic action value protected by issued receipts",
+    chartKey: "value",
+  },
+  {
+    id: "premiums_collected",
+    label: "Premiums collected",
+    value: "$3.00",
+    suffix: "",
+    description: "x402 TestNet USDC premiums settled through Algorand",
+    chartKey: "premium",
+  },
+]
+
+export const insuranceChartData = [
+  { day: "2026-06-01", actions: 3, value: 850, premium: 0.46, settlements: 1 },
+  { day: "2026-06-02", actions: 5, value: 1220, premium: 0.69, settlements: 2 },
+  { day: "2026-06-03", actions: 4, value: 980, premium: 0.52, settlements: 2 },
+  { day: "2026-06-04", actions: 7, value: 1860, premium: 1.05, settlements: 3 },
+  { day: "2026-06-05", actions: 8, value: 2310, premium: 1.31, settlements: 4 },
+  { day: "2026-06-06", actions: 10, value: 3700, premium: 2.09, settlements: 5 },
+  { day: "2026-06-07", actions: 14, value: 5300, premium: 3.00, settlements: 7 },
+]
+
+export const insuranceActions: InsuranceAction[] = [
+  {
+    id: "act-1",
+    agent: "Procurement Agent",
+    action: "Buy API credits from new vendor",
+    decision: "Covered",
+    risk: "High",
+    premium: "$0.91",
+    coverage: "$1,500",
+    settlement: "Settled",
+    lastEvent: "x402 settled 2 min ago",
+  },
+  {
+    id: "act-2",
+    agent: "Research Agent",
+    action: "Read vendor terms and pricing page",
+    decision: "Allowed",
+    risk: "Low",
+    premium: "-",
+    coverage: "-",
+    settlement: "Not required",
+    lastEvent: "Allowed 4 min ago",
+  },
+  {
+    id: "act-3",
+    agent: "Insurance Agent",
+    action: "Evaluate purchase request",
+    decision: "Quoted",
+    risk: "Medium",
+    premium: "$0.42",
+    coverage: "$800",
+    settlement: "Awaiting payment",
+    lastEvent: "Quote issued 6 min ago",
+  },
+  {
+    id: "act-4",
+    agent: "E-commerce Agent",
+    action: "Submit checkout form with payment scope",
+    decision: "Covered",
+    risk: "Medium",
+    premium: "$0.38",
+    coverage: "$650",
+    settlement: "Settled",
+    lastEvent: "Receipt issued 9 min ago",
+  },
+  {
+    id: "act-5",
+    agent: "Procurement Agent",
+    action: "Attempt vendor transfer above policy limit",
+    decision: "Denied",
+    risk: "High",
+    premium: "-",
+    coverage: "-",
+    settlement: "Blocked",
+    lastEvent: "Denied 12 min ago",
+  },
+  {
+    id: "act-6",
+    agent: "Risk Analyst Agent",
+    action: "Score vendor reputation and model confidence",
+    decision: "Recorded",
+    risk: "Medium",
+    premium: "-",
+    coverage: "-",
+    settlement: "Not required",
+    lastEvent: "Risk score updated 15 min ago",
+  },
+  {
+    id: "act-7",
+    agent: "Settlement Agent",
+    action: "Verify Algorand receipt and LORA reference",
+    decision: "Covered",
+    risk: "Low",
+    premium: "$0.27",
+    coverage: "$500",
+    settlement: "Settled",
+    lastEvent: "Settlement confirmed 18 min ago",
+  },
+]
