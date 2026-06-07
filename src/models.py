@@ -30,13 +30,6 @@ class ToolAction(BaseModel):
     created_at: datetime
 
 
-class DashboardAction(BaseModel):
-    id: str
-    agent_id: str
-    tool_name: str
-    created_at: datetime
-
-
 class RiskAssessment(BaseModel):
     decision: Decision
     risk_level: RiskLevel
@@ -109,7 +102,8 @@ class DashboardEventType(StrEnum):
 
 
 class DashboardSnapshot(BaseModel):
-    actions: list[DashboardAction]
+    actions: list[ToolAction]
+    evaluations: list[EvaluateResponse]
     quotes: list[Quote]
     receipts: list[CoverageReceipt]
     outcomes: list[ToolOutcome]
@@ -119,7 +113,7 @@ class DashboardEvent(BaseModel):
     type: DashboardEventType
     created_at: datetime
     snapshot: DashboardSnapshot | None = None
-    action: DashboardAction | None = None
+    action: ToolAction | None = None
     evaluation: EvaluateResponse | None = None
     quote: Quote | None = None
     receipt: CoverageReceipt | None = None

@@ -31,7 +31,7 @@ from src.store import (
     create_quote,
     create_receipt,
     get_payable_quote,
-    to_dashboard_action,
+    save_evaluation,
 )
 from src.underwriter import evaluate_action
 
@@ -127,9 +127,10 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
             rationale=assessment.rationale,
             requires_coverage=assessment.requires_coverage,
         )
+        save_evaluation(response)
         await event_stream.publish(
             DashboardEventType.EVALUATION,
-            action=to_dashboard_action(action),
+            action=action,
             evaluation=response,
             quote=None,
         )
@@ -160,9 +161,10 @@ async def evaluate(request: EvaluateRequest) -> EvaluateResponse:
         coverage_limit_usdc=quote.coverage_limit_usdc,
         expires_at=quote.expires_at,
     )
+    save_evaluation(response)
     await event_stream.publish(
         DashboardEventType.EVALUATION,
-        action=to_dashboard_action(action),
+        action=action,
         evaluation=response,
         quote=quote,
     )

@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from src.models import (
     CoverageReceipt,
-    DashboardAction,
     DashboardSnapshot,
+    EvaluateResponse,
     OutcomeState,
     Quote,
     ToolAction,
@@ -13,6 +13,7 @@ from src.models import (
 )
 
 actions: dict[str, ToolAction] = {}
+evaluations: dict[str, EvaluateResponse] = {}
 quotes: dict[str, Quote] = {}
 receipts: dict[str, CoverageReceipt] = {}
 outcomes: dict[str, ToolOutcome] = {}
@@ -38,17 +39,10 @@ def get_action(action_id: str) -> ToolAction:
     return actions[action_id]
 
 
-def to_dashboard_action(action: ToolAction) -> DashboardAction:
-    return DashboardAction(
-        id=action.id,
-        agent_id=action.agent_id,
-        tool_name=action.tool_name,
-        created_at=action.created_at,
-    )
-
-
-def list_dashboard_actions() -> list[DashboardAction]:
-    return [to_dashboard_action(action) for action in actions.values()]
+def save_evaluation(evaluation: EvaluateResponse) -> EvaluateResponse:
+    get_action(evaluation.action_id)
+    evaluations[evaluation.action_id] = evaluation
+    return evaluation
 
 
 def list_quotes() -> list[Quote]:
@@ -65,7 +59,8 @@ def list_outcomes() -> list[ToolOutcome]:
 
 def create_dashboard_snapshot() -> DashboardSnapshot:
     return DashboardSnapshot(
-        actions=list_dashboard_actions(),
+        actions=list(actions.values()),
+        evaluations=list(evaluations.values()),
         quotes=list_quotes(),
         receipts=list_receipts(),
         outcomes=list_outcomes(),

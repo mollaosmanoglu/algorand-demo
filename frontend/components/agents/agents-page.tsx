@@ -30,6 +30,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAgentEvents } from "@/hooks/use-agent-events"
+import { formatUsdc, friendlyNetwork } from "@/lib/agent-events"
 
 type AgentsPageProps = {
   agent: string
@@ -46,146 +48,6 @@ const agentNames = {
   settlement: "Settlement Agent",
 }
 
-const traceEvents = [
-  {
-    time: "09:41:12",
-    action: "Prepare vendor purchase",
-    trace: "evaluate -> quote -> coverage",
-    decision: "Quoted",
-    risk: "Medium",
-    premium: "$0.42",
-    status: "Running",
-  },
-  {
-    time: "09:41:15",
-    action: "Read vendor terms",
-    trace: "read -> classify -> allow",
-    decision: "Allowed",
-    risk: "Low",
-    premium: "-",
-    status: "Complete",
-  },
-  {
-    time: "09:41:18",
-    action: "Evaluate tool call",
-    trace: "policy -> risk -> price",
-    decision: "Quoted",
-    risk: "Medium",
-    premium: "$0.38",
-    status: "Running",
-  },
-  {
-    time: "09:41:22",
-    action: "Request API credits",
-    trace: "coverage -> x402 -> settle",
-    decision: "Covered",
-    risk: "High",
-    premium: "$0.91",
-    status: "Settled",
-  },
-  {
-    time: "09:41:29",
-    action: "Confirm receipt",
-    trace: "settlement -> receipt -> allow",
-    decision: "Covered",
-    risk: "Medium",
-    premium: "$0.42",
-    status: "Complete",
-  },
-  {
-    time: "09:41:36",
-    action: "Run original tool",
-    trace: "allow -> execute -> outcome",
-    decision: "Allowed",
-    risk: "Low",
-    premium: "-",
-    status: "Running",
-  },
-  {
-    time: "09:41:44",
-    action: "Publish outcome",
-    trace: "post-tool -> outcome -> dashboard",
-    decision: "Recorded",
-    risk: "Low",
-    premium: "-",
-    status: "Complete",
-  },
-  {
-    time: "09:42:03",
-    action: "Check vendor domain age",
-    trace: "lookup -> score -> allow",
-    decision: "Allowed",
-    risk: "Low",
-    premium: "-",
-    status: "Complete",
-  },
-  {
-    time: "09:42:11",
-    action: "Increase credit order",
-    trace: "policy -> limit -> deny",
-    decision: "Denied",
-    risk: "High",
-    premium: "-",
-    status: "Blocked",
-  },
-  {
-    time: "09:42:18",
-    action: "Quote fallback vendor",
-    trace: "evaluate -> risk -> quote",
-    decision: "Quoted",
-    risk: "Medium",
-    premium: "$0.27",
-    status: "Running",
-  },
-  {
-    time: "09:42:24",
-    action: "Pay fallback coverage",
-    trace: "coverage -> x402 -> settle",
-    decision: "Covered",
-    risk: "Medium",
-    premium: "$0.27",
-    status: "Settled",
-  },
-  {
-    time: "09:42:31",
-    action: "Verify LORA reference",
-    trace: "settlement -> tx -> receipt",
-    decision: "Recorded",
-    risk: "Low",
-    premium: "-",
-    status: "Complete",
-  },
-  {
-    time: "09:42:39",
-    action: "Notify workspace",
-    trace: "outcome -> event -> dashboard",
-    decision: "Recorded",
-    risk: "Low",
-    premium: "-",
-    status: "Complete",
-  },
-]
-
-const agentProfileStats = [
-  { label: "Status", value: "Running" },
-  { label: "Objective", value: "Maintain API credits" },
-  { label: "Policy", value: "Standard" },
-  { label: "Wallet", value: "48.20 USDC" },
-  { label: "Daily limit", value: "EUR 1,000" },
-  { label: "Last premium", value: "$0.91" },
-]
-
-const settlementStats = [
-  { label: "x402", value: "Paid" },
-  { label: "Network", value: "Algorand TestNet" },
-  { label: "Asset", value: "USDC" },
-  { label: "Premium", value: "$0.91" },
-  { label: "Confirmation", value: "3.2 seconds" },
-  { label: "Transaction", value: "7F9A...2BD1" },
-  { label: "Coverage", value: "Active" },
-  { label: "Receipt", value: "COV-1042" },
-]
-
 const rightPanelTabClass =
   "h-8 px-3 text-body shadow-none data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
 
@@ -196,7 +58,40 @@ export function AgentsPage({
 }: AgentsPageProps) {
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [settlementsOpen, setSettlementsOpen] = React.useState(true)
+  const { rows, latestReceipt, connectionStatus } = useAgentEvents()
   const agentName = agentNames[agent as keyof typeof agentNames] ?? agentNames.research
+  const agentProfileStats = [
+    {
+      label: "Status",
+      value: connectionStatus === "connected" ? "Running" : "Reconnecting",
+    },
+    { label: "Objective", value: "Protect consequential tool calls" },
+    { label: "Policy", value: "Luphra MicroCover" },
+    { label: "Wallet", value: "19.98 USDC" },
+    { label: "Per-call limit", value: "5,000 USDC" },
+    {
+      label: "Last premium",
+      value: formatUsdc(latestReceipt?.premium_usdc),
+    },
+  ]
+  const settlementStats = latestReceipt
+    ? [
+        { label: "x402", value: "Paid" },
+        { label: "Network", value: friendlyNetwork(latestReceipt.network) },
+        { label: "Asset", value: latestReceipt.asset },
+        { label: "Premium", value: formatUsdc(latestReceipt.premium_usdc) },
+        {
+          label: "Coverage",
+          value: formatUsdc(latestReceipt.coverage_limit_usdc),
+        },
+        {
+          label: "Transaction",
+          value: latestReceipt.settlement_transaction ?? "Confirmed on TestNet",
+        },
+        { label: "Status", value: "Active" },
+        { label: "Receipt", value: latestReceipt.id },
+      ]
+    : []
 
   return (
     <Collapsible
@@ -305,9 +200,10 @@ export function AgentsPage({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {traceEvents.map((event) => (
+                      {rows.map((event) => (
                         <TableRow
-                          key={`${event.time}-${event.action}`}
+                          key={event.id}
+                          title={event.rationale ?? undefined}
                           className="hover:bg-accent border-b border-border/50 cursor-pointer"
                         >
                           <TableCell className="py-2.5 align-top">
@@ -347,6 +243,18 @@ export function AgentsPage({
                           </TableCell>
                         </TableRow>
                       ))}
+                      {rows.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={7}
+                            className="h-28 text-center text-meta text-muted-foreground"
+                          >
+                            {connectionStatus === "connected"
+                              ? "No agent actions yet."
+                              : "Connecting to the Luphra event stream..."}
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
                     </TableBody>
                   </Table>
                 </div>
@@ -457,20 +365,28 @@ export function AgentsPage({
                   <div className="px-6 py-5">
                     <div className="mb-5 min-w-0">
                       <p className="truncate text-title font-semibold text-foreground">
-                        Latest settlement
+                        {latestReceipt ? "Latest settlement" : "No settlements yet"}
                       </p>
                       <p className="mt-1 truncate text-caption uppercase text-muted-foreground">
-                        Coverage activated after payment
+                        {latestReceipt
+                          ? "Coverage activated after payment"
+                          : "Covered tool calls will appear here"}
                       </p>
                     </div>
-                    <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
-                      {settlementStats.map((stat) => (
-                        <div key={stat.label} className="min-w-0">
-                          <dt className="truncate text-muted-foreground">{stat.label}</dt>
-                          <dd className="mt-0.5 truncate text-foreground">{stat.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
+                    {latestReceipt ? (
+                      <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
+                        {settlementStats.map((stat) => (
+                          <div key={stat.label} className="min-w-0">
+                            <dt className="truncate text-muted-foreground">{stat.label}</dt>
+                            <dd className="mt-0.5 truncate text-foreground">{stat.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : (
+                      <p className="text-title text-muted-foreground">
+                        No x402 coverage receipt has been issued in this backend session.
+                      </p>
+                    )}
                   </div>
                 </ScrollArea>
               ) : null}
