@@ -51,6 +51,17 @@ const agentNames = {
 const rightPanelTabClass =
   "h-8 px-3 text-body shadow-none data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
 
+function statusStyle(status: string) {
+  if (["Evaluating", "Quoted", "Covered"].includes(status)) {
+    return "text-[hsl(var(--info-chart))]"
+  }
+  if (status === "Succeeded") return "text-[hsl(var(--info-success))]"
+  if (["Denied", "Failed"].includes(status)) {
+    return "text-[hsl(var(--info-error))]"
+  }
+  return "text-muted-foreground"
+}
+
 export function AgentsPage({
   agent,
   projectName,
@@ -240,7 +251,7 @@ export function AgentsPage({
                             </span>
                           </TableCell>
                           <TableCell className="py-2.5 align-top">
-                            <span className="text-meta text-muted-foreground">
+                            <span className={`text-meta font-medium ${statusStyle(event.status)}`}>
                               {event.status}
                             </span>
                           </TableCell>
