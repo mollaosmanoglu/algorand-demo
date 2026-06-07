@@ -9,9 +9,15 @@ import {
   deriveActionRows,
   emptyAgentEventState,
 } from "@/lib/agent-events"
+import {
+  AgentLogLine,
+  createAgentLogLine,
+  formatDashboardEvent,
+} from "@/lib/agent-event-logs"
 
 const EVENTS_URL = "ws://127.0.0.1:4021/events"
 const RECONNECT_DELAY_MS = 1500
+const MAX_LOG_LINES = 300
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "warning"
 
@@ -19,6 +25,12 @@ export function useAgentEvents() {
   const [state, setState] = React.useState<AgentEventState>(emptyAgentEventState)
   const [connectionStatus, setConnectionStatus] =
     React.useState<ConnectionStatus>("connecting")
+  const [logLines, setLogLines] = React.useState<AgentLogLine[]>([])
+
+  const appendLogs = React.useCallback((lines: AgentLogLine[]) => {
+    if (!lines.length) return
+    setLogLines((current) => [...current, ...lines].slice(-MAX_LOG_LINES))
+  }, [])
 
   React.useEffect(() => {
     let socket: WebSocket | null = null
@@ -30,19 +42,36 @@ export function useAgentEvents() {
       setConnectionStatus("connecting")
       socket = new WebSocket(EVENTS_URL)
 
-      socket.onopen = () => setConnectionStatus("connected")
+      socket.onopen = () => {
+        setConnectionStatus("connected")
+        appendLogs([createAgentLogLine("INFO", "websocket connected", "success")])
+      }
       socket.onmessage = (message) => {
         try {
           const event = JSON.parse(message.data) as DashboardEvent
           setState((current) => applyDashboardEvent(current, event))
+          appendLogs(formatDashboardEvent(event))
         } catch {
           setConnectionStatus("warning")
+          appendLogs([
+            createAgentLogLine("WARN", "ignored malformed websocket message", "warning"),
+          ])
         }
       }
-      socket.onerror = () => setConnectionStatus("warning")
+      socket.onerror = () => {
+        setConnectionStatus("warning")
+        appendLogs([createAgentLogLine("ERROR", "websocket transport error", "error")])
+      }
       socket.onclose = () => {
         if (stopped) return
         setConnectionStatus("disconnected")
+        appendLogs([
+          createAgentLogLine(
+            "WARN",
+            `websocket disconnected; retrying in ${RECONNECT_DELAY_MS}ms`,
+            "warning",
+          ),
+        ])
         reconnectTimer = setTimeout(connect, RECONNECT_DELAY_MS)
       }
     }
@@ -53,7 +82,7 @@ export function useAgentEvents() {
       if (reconnectTimer) clearTimeout(reconnectTimer)
       socket?.close()
     }
-  }, [])
+  }, [appendLogs])
 
   const rows = React.useMemo(() => deriveActionRows(state), [state])
   const latestReceipt = React.useMemo(
@@ -90,5 +119,6 @@ export function useAgentEvents() {
     latestReceipt,
     pendingSettlement,
     connectionStatus,
+    logLines,
   }
 }

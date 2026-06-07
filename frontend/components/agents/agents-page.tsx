@@ -34,6 +34,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAgentEvents } from "@/hooks/use-agent-events"
 import { formatUsdc, friendlyNetwork } from "@/lib/agent-events"
+import { AgentEventTerminal } from "@/components/agents/agent-event-terminal"
 
 type AgentsPageProps = {
   agent: string
@@ -119,6 +120,7 @@ export function AgentsPage({
     latestReceipt,
     pendingSettlement,
     connectionStatus,
+    logLines,
   } = useAgentEvents()
   const agentName = agentNames[agent as keyof typeof agentNames] ?? agentNames.research
   const agentProfileStats = [
@@ -458,6 +460,9 @@ export function AgentsPage({
               </div>
 
               {settlementsOpen ? (
+                settlementTab === "logs" ? (
+                  <AgentEventTerminal lines={logLines} />
+                ) : (
                 <ScrollArea className="min-h-0 flex-1">
                   <div className="px-6 py-5">
                     <div className="mb-5 min-w-0">
@@ -541,6 +546,7 @@ export function AgentsPage({
                     )}
                   </div>
                 </ScrollArea>
+                )
               ) : null}
             </div>
           </aside>
