@@ -51,7 +51,7 @@ const agentNames = {
 }
 
 const rightPanelTabClass =
-  "h-8 px-3 text-body shadow-none data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
+  "relative h-8 px-3 text-body shadow-none data-[state=active]:bg-transparent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none"
 
 function statusStyle(status: string) {
   if (["Evaluating", "Quoted", "Paid"].includes(status)) {
@@ -112,6 +112,8 @@ export function AgentsPage({
 }: AgentsPageProps) {
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [settlementsOpen, setSettlementsOpen] = React.useState(true)
+  const [profileTab, setProfileTab] = React.useState("profile")
+  const [settlementTab, setSettlementTab] = React.useState("settlements")
   const {
     rows,
     latestReceipt,
@@ -349,17 +351,20 @@ export function AgentsPage({
           <aside className="hidden w-[min(46vw,560px)] min-w-[430px] shrink-0 flex-col bg-card data-[state=closed]:lg:hidden lg:flex">
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
-                <Tabs defaultValue="profile" className="gap-0">
+                <Tabs value={profileTab} onValueChange={setProfileTab} className="gap-0">
                   <TabsList className="h-8 rounded-md bg-transparent p-0">
-                    <TabsTrigger value="profile" className={rightPanelTabClass}>
-                      Profile
-                    </TabsTrigger>
-                    <TabsTrigger value="policy" className={rightPanelTabClass}>
-                      Policy
-                    </TabsTrigger>
-                    <TabsTrigger value="checks" className={rightPanelTabClass}>
-                      Checks
-                    </TabsTrigger>
+                    {["profile", "policy", "checks"].map((tab) => (
+                      <TabsTrigger key={tab} value={tab} className={rightPanelTabClass}>
+                        {profileTab === tab ? (
+                          <motion.span
+                            layoutId="profile-tab-background"
+                            className="absolute inset-0 rounded-md bg-sidebar-accent"
+                            transition={{ type: "spring", bounce: 0.1, duration: 0.3 }}
+                          />
+                        ) : null}
+                        <span className="relative z-10 capitalize">{tab}</span>
+                      </TabsTrigger>
+                    ))}
                   </TabsList>
                 </Tabs>
                 <Button variant="ghost" size="icon-sm" aria-label="Add profile trace">
@@ -426,14 +431,24 @@ export function AgentsPage({
                       <ChevronUp className="h-4 w-4" />
                     )}
                   </Button>
-                  <Tabs defaultValue="settlements" className="min-w-0 gap-0">
+                  <Tabs
+                    value={settlementTab}
+                    onValueChange={setSettlementTab}
+                    className="min-w-0 gap-0"
+                  >
                     <TabsList className="h-8 rounded-md bg-transparent p-0">
-                      <TabsTrigger value="settlements" className={rightPanelTabClass}>
-                        Settlements
-                      </TabsTrigger>
-                      <TabsTrigger value="logs" className={rightPanelTabClass}>
-                        Logs
-                      </TabsTrigger>
+                      {["settlements", "logs"].map((tab) => (
+                        <TabsTrigger key={tab} value={tab} className={rightPanelTabClass}>
+                          {settlementTab === tab ? (
+                            <motion.span
+                              layoutId="settlement-tab-background"
+                              className="absolute inset-0 rounded-md bg-sidebar-accent"
+                              transition={{ type: "spring", bounce: 0.1, duration: 0.3 }}
+                            />
+                          ) : null}
+                          <span className="relative z-10 capitalize">{tab}</span>
+                        </TabsTrigger>
+                      ))}
                     </TabsList>
                   </Tabs>
                 </div>
