@@ -38,17 +38,9 @@ import { AgentEventTerminal } from "@/components/agents/agent-event-terminal"
 
 type AgentsPageProps = {
   agent: string
+  agentName: string
   projectName: string
   workspaceName: string
-}
-
-const agentNames = {
-  research: "Research Agent",
-  "e-commerce": "E-commerce Agent",
-  insurance: "Insurance Agent",
-  procurement: "Procurement Agent",
-  "risk-analyst": "Risk Analyst Agent",
-  settlement: "Settlement Agent",
 }
 
 const rightPanelTabClass =
@@ -108,6 +100,7 @@ function AnimatedValue({
 
 export function AgentsPage({
   agent,
+  agentName,
   projectName,
   workspaceName,
 }: AgentsPageProps) {
@@ -122,7 +115,6 @@ export function AgentsPage({
     connectionStatus,
     logLines,
   } = useAgentEvents()
-  const agentName = agentNames[agent as keyof typeof agentNames] ?? agentNames.research
   const agentProfileStats = [
     {
       label: "Status",

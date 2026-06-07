@@ -1,16 +1,23 @@
 "use client";
 
+import * as React from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Bot,
   ChevronDown,
+  Folder,
+  FolderOpen,
   LayoutDashboard,
   Moon,
   Settings,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useAgentEvents } from "@/hooks/use-agent-events";
+import { deriveLiveAgents } from "@/lib/project-agents";
+import { programmingProjects } from "@/lib/projects";
 import {
   Collapsible,
   CollapsibleContent,
@@ -31,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -43,15 +51,48 @@ export function DashboardSidebar() {
 
   const navItems = [{ icon: LayoutDashboard, label: "Overview", href: "/" }];
 
-  const agentItems = [
-    { label: "Research Agent", slug: "research" },
-    { label: "E-commerce Agent", slug: "e-commerce" },
-    { label: "Insurance Agent", slug: "insurance" },
-    { label: "Procurement Agent", slug: "procurement" },
-    { label: "Risk Analyst Agent", slug: "risk-analyst" },
-    { label: "Settlement Agent", slug: "settlement" },
-  ];
-  const selectedAgent = searchParams.get("agent") ?? agentItems[0].slug;
+  const selectedProject = searchParams.get("project") ?? "algorand-demo";
+  const selectedAgent = searchParams.get("agent");
+  const { state, connectionStatus } = useAgentEvents();
+  const liveAgents = React.useMemo(
+    () => deriveLiveAgents(Object.values(state.actions)),
+    [state.actions],
+  );
+  const initializedAgents = React.useRef(false);
+  const knownAgentIds = React.useRef(new Set<string>());
+  const [revealingAgentIds, setRevealingAgentIds] = React.useState<Set<string>>(
+    new Set(),
+  );
+
+  React.useEffect(() => {
+    if (connectionStatus !== "connected") return;
+
+    const currentIds = liveAgents.map((agent) => agent.id);
+    if (!initializedAgents.current) {
+      currentIds.forEach((id) => knownAgentIds.current.add(id));
+      initializedAgents.current = true;
+      return;
+    }
+
+    const newIds = currentIds.filter((id) => !knownAgentIds.current.has(id));
+    if (!newIds.length) return;
+
+    newIds.forEach((id) => knownAgentIds.current.add(id));
+    setRevealingAgentIds((current) => new Set([...current, ...newIds]));
+    const timer = window.setTimeout(() => {
+      setRevealingAgentIds((current) => {
+        const next = new Set(current);
+        newIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, 650);
+
+    return () => window.clearTimeout(timer);
+  }, [connectionStatus, liveAgents]);
+
+  const projects = programmingProjects.map((project) =>
+    project.live ? { ...project, agents: liveAgents } : project,
+  );
 
   return (
     <Sidebar
@@ -153,38 +194,104 @@ export function DashboardSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <Collapsible defaultOpen asChild className="group/collapsible">
+              <Collapsible defaultOpen asChild className="group/projects">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       size="sm"
-                      tooltip="Agents"
+                      tooltip="Projects"
                       className="gap-2 h-8"
                     >
-                      <Bot className="w-3.5 h-3.5" />
-                      <span className="text-title">Agents</span>
-                      <ChevronDown className="ml-auto w-3.5 h-3.5 transition-transform group-data-[state=open]/collapsible:rotate-180 group-data-[collapsible=icon]:hidden" />
+                      <FolderOpen className="w-3.5 h-3.5" />
+                      <span className="text-title">Projects</span>
+                      <ChevronDown className="ml-auto w-3.5 h-3.5 transition-transform duration-200 ease-out group-data-[state=open]/projects:rotate-180 group-data-[collapsible=icon]:hidden" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub className="mt-1.5 ml-3.5 mr-0 gap-1.5 px-0">
-                      {agentItems.map((item) => (
-                        <SidebarMenuSubItem key={item.slug}>
-                          <SidebarMenuSubButton
-                            asChild
-                            size="sm"
-                            isActive={
-                              pathname === "/agents" &&
-                              selectedAgent === item.slug
-                            }
-                            className="h-8 w-full translate-x-0 pl-5 pr-2 text-title data-[size=sm]:text-title"
-                          >
-                            <Link href={`/agents?agent=${item.slug}`}>
-                              <Bot className="w-3.5 h-3.5" />
-                              <span>{item.label}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
+                  <CollapsibleContent className="sidebar-collapsible-content">
+                    <SidebarMenuSub className="mt-1.5 ml-3.5 mr-0 gap-1 px-0">
+                      {projects.map((project) => (
+                        <Collapsible
+                          key={project.id}
+                          defaultOpen={project.id === selectedProject}
+                          asChild
+                          className="group/project"
+                        >
+                          <SidebarMenuSubItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuSubButton
+                                size="sm"
+                                className="h-8 w-full translate-x-0 pl-4 pr-2 text-title data-[size=sm]:text-title"
+                              >
+                                <Folder className="w-3.5 h-3.5" />
+                                <span className="truncate">{project.name}</span>
+                                <ChevronDown className="ml-auto w-3 h-3 transition-transform duration-200 ease-out group-data-[state=open]/project:rotate-180" />
+                              </SidebarMenuSubButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="sidebar-collapsible-content">
+                              <div className="ml-4 border-l border-sidebar-border pl-2">
+                                {project.agents.map((agent) => {
+                                  const revealing = revealingAgentIds.has(agent.id);
+                                  return (
+                                    <AnimatePresence
+                                      key={`${project.id}:${agent.id}`}
+                                      mode="wait"
+                                      initial={false}
+                                    >
+                                      {revealing ? (
+                                        <motion.div
+                                          key="loading"
+                                          className="flex h-8 items-center gap-2 px-2"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                        >
+                                          <Skeleton className="h-3.5 w-3.5 rounded-sm" />
+                                          <Skeleton className="h-3 w-24" />
+                                        </motion.div>
+                                      ) : (
+                                        <motion.div
+                                          key="agent"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                        >
+                                          <SidebarMenuSubButton
+                                            asChild
+                                            size="sm"
+                                            isActive={
+                                              pathname === "/agents" &&
+                                              selectedProject === project.id &&
+                                              selectedAgent === agent.id
+                                            }
+                                            className="h-8 w-full translate-x-0 px-2 text-title data-[size=sm]:text-title"
+                                          >
+                                            <Link
+                                              href={`/agents?project=${project.id}&agent=${encodeURIComponent(agent.id)}`}
+                                            >
+                                              <Bot className="w-3.5 h-3.5" />
+                                              <span className="truncate">{agent.name}</span>
+                                            </Link>
+                                          </SidebarMenuSubButton>
+                                        </motion.div>
+                                      )}
+                                    </AnimatePresence>
+                                  );
+                                })}
+                                {project.live &&
+                                  project.agents.length === 0 &&
+                                  (connectionStatus === "connecting" ? (
+                                    <div className="flex h-8 items-center gap-2 px-2">
+                                      <Skeleton className="h-3.5 w-3.5 rounded-sm" />
+                                      <Skeleton className="h-3 w-24" />
+                                    </div>
+                                  ) : (
+                                    <div className="flex h-8 items-center px-2 text-meta text-muted-foreground">
+                                      No active agents
+                                    </div>
+                                  ))}
+                              </div>
+                            </CollapsibleContent>
+                          </SidebarMenuSubItem>
+                        </Collapsible>
                       ))}
                     </SidebarMenuSub>
                   </CollapsibleContent>
