@@ -90,7 +90,7 @@ type MockAction = {
   denied?: boolean
 }
 
-const NETWORK = "algorand:testnet"
+const NETWORK = "defter:testnet"
 const ASSET = "USDC"
 const ACTION_DAY_OFFSETS = [
   0, 0, 0, 0, 0,

@@ -171,7 +171,7 @@ export function formatUsdc(value: string | null | undefined): string {
 }
 
 export function friendlyNetwork(network: string): string {
-  return network.startsWith("algorand:") ? "Algorand TestNet" : network
+  return network.startsWith("defter:") ? "Defter TestNet" : network
 }
 
 export function filterAgentEventState(

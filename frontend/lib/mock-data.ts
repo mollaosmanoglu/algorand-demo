@@ -138,7 +138,7 @@ export const insuranceMetrics: InsuranceMetric[] = [
     label: "Premiums collected",
     value: "$3.00",
     suffix: "",
-    description: "x402 TestNet USDC premiums settled through Algorand",
+    description: "x402 TestNet USDC premiums settled through Defter",
     chartKey: "premium",
   },
 ]
@@ -223,7 +223,7 @@ export const insuranceActions: InsuranceAction[] = [
   {
     id: "act-7",
     agent: "Settlement Agent",
-    action: "Verify Algorand receipt and LORA reference",
+    action: "Verify Defter receipt and LORA reference",
     decision: "Covered",
     risk: "Low",
     premium: "$0.27",

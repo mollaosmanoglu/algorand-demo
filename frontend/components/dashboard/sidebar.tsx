@@ -156,14 +156,14 @@ export function DashboardSidebar() {
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 overflow-hidden rounded flex items-center justify-center shrink-0 bg-muted">
                   <img
-                    src="/images/algorand-logo.webp"
+                    src="/images/defter-logo.svg"
                     alt=""
                     className="h-7 w-7 object-contain"
                   />
                 </div>
                 <div className="min-w-0">
                   <div className="text-foreground font-semibold text-body truncate">
-                    Algorand Hack
+                    Defter
                   </div>
                   <div className="text-muted-foreground text-meta truncate">
                     Agent insurance

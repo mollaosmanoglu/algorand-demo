@@ -20,3 +20,5 @@ __pycache__/
 src/.codex-issue-register/
 src/.codex-security-register/
 src/outputs/
+.agents/
+skills-lock.json

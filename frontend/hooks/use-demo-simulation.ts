@@ -38,7 +38,7 @@ const DEMO_SCRIPT: DemoStep[] = [
   { tool: "issue_account_credentials", risk: "medium", premium: "0.0019", limit: "300", delay: 900, resolveDelay: 600 },
 ]
 
-const NETWORK = "algorand:testnet"
+const NETWORK = "defter:testnet"
 const ASSET = "USDC"
 
 /** Each step has two phases: "pending" (action only) and "resolved" (full data) */

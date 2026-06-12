@@ -26,7 +26,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           src="/images/luphra-logo.png"
           alt="Luphra"
           width={168}
-          height={39}
+          height={48}
           priority
           className="fixed left-5 top-5 z-30 h-auto w-[100px]"
         />
