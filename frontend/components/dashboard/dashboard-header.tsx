@@ -33,12 +33,12 @@ export function DashboardHeader() {
 
   return (
     <>
-      <div className="flex items-center justify-between pl-12 pr-6 py-2.5">
+      <div className="flex items-center justify-between pl-12 pr-6 py-4">
         <div className="w-8" />
         <Button
           variant="ghost"
           onClick={() => setOpen(true)}
-          className="relative w-full max-w-sm h-6 bg-sidebar-accent border-none text-caption text-muted-foreground/70 rounded-xl flex items-center justify-center gap-1.5 hover:bg-sidebar-accent/80 transition-colors px-3"
+          className="relative w-full max-w-sm h-9 bg-sidebar-accent border-none text-caption text-muted-foreground/70 rounded-xl flex items-center justify-center gap-1.5 hover:bg-sidebar-accent/80 transition-colors px-3"
         >
           <Search className="w-3 h-3 shrink-0" />
           <span className="whitespace-nowrap">Search...</span>

@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import * as React from "react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
 import {
@@ -44,6 +43,7 @@ import {
   mockAgentDashboards,
 } from "@/lib/mock-agent-dashboards"
 import { AgentEventTerminal } from "@/components/agents/agent-event-terminal"
+import { DitheredBanner } from "@/components/agents/dithered-banner"
 
 type AgentsPageProps = {
   agent: string
@@ -422,14 +422,12 @@ export function AgentsPage({
 
               <ScrollArea className="min-h-0 flex-1">
                 <div className="px-6 py-5">
-                  <div className="grid aspect-[3/1] w-full place-items-center overflow-hidden rounded-md border border-border bg-muted">
-                    <Image
+                  <div className="w-full overflow-hidden rounded-md border border-border">
+                    <DitheredBanner
                       src="/images/onizuka-banner.png"
-                      alt="Onizuka agent banner"
-                      width={2172}
-                      height={724}
-                      priority
-                      className="h-full w-full object-cover"
+                      className="w-full aspect-[3/1]"
+                      dotColor="rgba(0,0,0,0.85)"
+                      bgColor="#f4f4f5"
                     />
                   </div>
 

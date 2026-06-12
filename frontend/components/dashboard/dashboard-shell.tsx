@@ -28,7 +28,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           width={168}
           height={39}
           priority
-          className="fixed left-5 top-3 z-30 h-auto w-[100px]"
+          className="fixed left-5 top-5 z-30 h-auto w-[100px]"
         />
         <Suspense fallback={null}>
           <DashboardSidebar />

@@ -105,7 +105,7 @@ export function DashboardSidebar() {
         } as React.CSSProperties
       }
     >
-      <SidebarContent className="px-3 pt-14 pb-2">
+      <SidebarContent className="px-3 pt-20 pb-2">
         <div className="space-y-5 group-data-[collapsible=icon]:space-y-2">
           {/* ACCOUNT Section */}
           <div className="space-y-2">
