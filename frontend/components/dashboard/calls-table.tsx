@@ -83,7 +83,6 @@ export function CallsTable({ projects }: { projects: ProjectActivity[] }) {
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="!text-caption placeholder:text-caption"
-            style={{ fontSize: "8px" }}
           />
         </InputGroup>
       </div>

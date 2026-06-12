@@ -59,15 +59,15 @@ export default function DashboardPage() {
       <header className="shrink-0 border-b border-border bg-card">
         <div className="flex h-12 min-w-0 items-center px-5">
           <Breadcrumb className="min-w-0">
-            <BreadcrumbList className="flex-nowrap gap-1.5 overflow-hidden text-title sm:gap-2">
+            <BreadcrumbList className="flex-nowrap gap-1.5 overflow-hidden text-meta sm:gap-2">
               <BreadcrumbItem className="min-w-0 shrink">
-                <BreadcrumbPage className="truncate font-semibold text-muted-foreground">
+                <BreadcrumbPage className="truncate font-medium text-muted-foreground">
                   Projects
                 </BreadcrumbPage>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="shrink-0" />
               <BreadcrumbItem className="min-w-0 shrink">
-                <BreadcrumbPage className="truncate font-semibold text-muted-foreground">
+                <BreadcrumbPage className="truncate font-semibold">
                   Overview
                 </BreadcrumbPage>
               </BreadcrumbItem>
