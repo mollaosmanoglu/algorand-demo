@@ -442,7 +442,7 @@ export function AgentsPage({
                         Luphra MicroCover
                       </p>
                     </div>
-                    <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
+                    <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-body">
                       {agentProfileStats.map((stat) => (
                         <div key={stat.label} className="min-w-0">
                           <dt className="truncate text-muted-foreground">{stat.label}</dt>
@@ -530,7 +530,7 @@ export function AgentsPage({
                     {pendingSettlement ? (
                       <motion.dl
                         key={pendingSettlement.id}
-                        className="grid grid-cols-2 gap-x-12 gap-y-5 text-title"
+                        className="grid grid-cols-2 gap-x-12 gap-y-5 text-body"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={revealTransition}
@@ -554,7 +554,7 @@ export function AgentsPage({
                         ))}
                       </motion.dl>
                     ) : latestReceipt ? (
-                      <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-title">
+                      <dl className="grid grid-cols-2 gap-x-12 gap-y-5 text-body">
                         {settlementStats.map((stat) => (
                           <motion.div
                             key={`${latestReceipt.id}-${stat.label}`}
@@ -586,7 +586,7 @@ export function AgentsPage({
                         ))}
                       </dl>
                     ) : (
-                      <p className="text-title text-muted-foreground">
+                      <p className="text-body text-muted-foreground">
                         No x402 coverage receipt has been issued in this backend session.
                       </p>
                     )}

@@ -162,10 +162,10 @@ export function DashboardSidebar() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-foreground font-semibold text-title truncate">
+                  <div className="text-foreground font-semibold text-body truncate">
                     Algorand Hack
                   </div>
-                  <div className="text-muted-foreground text-section truncate">
+                  <div className="text-muted-foreground text-meta truncate">
                     Agent insurance
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export function DashboardSidebar() {
 
           {/* GENERAL Section */}
           <div className="space-y-2 group-data-[collapsible=icon]:space-y-0">
-            <h2 className="text-body font-semibold text-muted-foreground uppercase tracking-wide px-1 group-data-[collapsible=icon]:hidden">
+            <h2 className="text-caption font-semibold text-muted-foreground uppercase tracking-wide px-1 group-data-[collapsible=icon]:hidden">
               General
             </h2>
             <SidebarMenu>
@@ -189,7 +189,7 @@ export function DashboardSidebar() {
                   >
                     <Link href={item.href} className="gap-2 h-8">
                       <item.icon className="w-3.5 h-3.5" />
-                      <span className="text-title">{item.label}</span>
+                      <span className="text-body">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -203,7 +203,7 @@ export function DashboardSidebar() {
                       className="gap-2 h-8"
                     >
                       <FolderOpen className="w-3.5 h-3.5" />
-                      <span className="text-title">Projects</span>
+                      <span className="text-body">Projects</span>
                       <ChevronDown className="ml-auto w-3.5 h-3.5 transition-transform duration-200 ease-out group-data-[state=open]/projects:rotate-180 group-data-[collapsible=icon]:hidden" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
@@ -220,7 +220,7 @@ export function DashboardSidebar() {
                             <CollapsibleTrigger asChild>
                               <SidebarMenuSubButton
                                 size="sm"
-                                className="h-8 w-full translate-x-0 pl-4 pr-2 text-title data-[size=sm]:text-title"
+                                className="h-8 w-full translate-x-0 pl-4 pr-2 text-body data-[size=sm]:text-body"
                               >
                                 <Folder className="w-3.5 h-3.5" />
                                 <span className="truncate">{project.name}</span>
@@ -262,7 +262,7 @@ export function DashboardSidebar() {
                                               selectedProject === project.id &&
                                               selectedAgent === agent.id
                                             }
-                                            className="h-8 w-full translate-x-0 px-2 text-title data-[size=sm]:text-title"
+                                            className="h-8 w-full translate-x-0 px-2 text-body data-[size=sm]:text-body"
                                           >
                                             <Link
                                               href={`/agents?project=${project.id}&agent=${encodeURIComponent(agent.id)}`}

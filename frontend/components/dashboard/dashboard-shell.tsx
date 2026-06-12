@@ -36,6 +36,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <SidebarInset className="bg-sidebar pl-2 flex flex-col">
           <DashboardHeader />
           <div className="bg-card rounded-tl-xl flex-1 overflow-auto relative">
+            <span className="absolute inset-0 rounded-[inherit] ring-1 ring-white/60 mix-blend-overlay pointer-events-none z-10" />
             {children}
           </div>
         </SidebarInset>
