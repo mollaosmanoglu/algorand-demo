@@ -67,7 +67,7 @@ export function formatDashboardEvent(event: DashboardEvent): AgentLogLine[] {
       lines.push(
         createAgentLogLine(
           "QUOTE",
-          `${actionName} premium=${event.quote.premium_usdc} USDC limit=${event.quote.coverage_limit_usdc} USDC`,
+          `${actionName} premium=$${event.quote.premium_usdc} limit=$${event.quote.coverage_limit_usdc}`,
           "warning",
         ),
       )

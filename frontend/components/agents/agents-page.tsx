@@ -175,10 +175,10 @@ export function AgentsPage({
       label: "Policy",
       value: mockDashboard?.policy ?? "Luphra MicroCover",
     },
-    { label: "Wallet", value: mockDashboard?.wallet ?? "19.98 USDC" },
+    { label: "Wallet", value: mockDashboard?.wallet ?? "$19.98" },
     {
       label: "Per-call limit",
-      value: mockDashboard?.perCallLimit ?? "5,000 USDC",
+      value: mockDashboard?.perCallLimit ?? "$5,000",
     },
     {
       label: "Last premium",

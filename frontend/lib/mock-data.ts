@@ -138,7 +138,7 @@ export const insuranceMetrics: InsuranceMetric[] = [
     label: "Premiums collected",
     value: "$3.00",
     suffix: "",
-    description: "x402 TestNet USDC premiums settled through Defter",
+    description: "x402 TestNet premiums settled through Defter",
     chartKey: "premium",
   },
 ]

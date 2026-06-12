@@ -13,6 +13,21 @@ import {
   Settings,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+
+const BRAILLE_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"] as const;
+
+function BrailleSpinner({ className }: { className?: string }) {
+  const [frame, setFrame] = React.useState(0);
+  React.useEffect(() => {
+    const id = setInterval(() => setFrame((f) => (f + 1) % BRAILLE_FRAMES.length), 80);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span className={className} style={{ lineHeight: 1, transform: "scaleX(1.5)", display: "inline-block" }}>
+      {BRAILLE_FRAMES[frame]}
+    </span>
+  );
+}
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAgentEvents } from "@/hooks/use-agent-events";
@@ -269,6 +284,7 @@ export function DashboardSidebar() {
                                             >
                                               <Bot className="w-3.5 h-3.5" />
                                               <span className="truncate">{agent.name}</span>
+                                              <BrailleSpinner className="ml-auto text-foreground/70 text-title font-mono" />
                                             </Link>
                                           </SidebarMenuSubButton>
                                         </motion.div>

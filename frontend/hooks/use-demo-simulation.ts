@@ -23,12 +23,23 @@ type DemoStep = {
   resolveDelay: number
 }
 
+/** Steps 0–11 are "historical" — shown already resolved on load.
+ *  Steps 12+ are the live simulation that plays out progressively. */
 const DEMO_SCRIPT: DemoStep[] = [
-  { tool: "fetch_customer_email", risk: "low", delay: 600, resolveDelay: 500 },
-  { tool: "scan_passport", risk: "low", delay: 900, resolveDelay: 600 },
-  { tool: "verify_home_address", risk: "low", delay: 800, resolveDelay: 500 },
-  { tool: "check_sanctions_db", risk: "medium", premium: "0.0028", limit: "500", delay: 1000, resolveDelay: 800 },
-  { tool: "pull_credit_report", risk: "medium", premium: "0.0035", limit: "450", delay: 900, resolveDelay: 700 },
+  // -- Historical actions (pre-existing) --
+  { tool: "init_onboarding_session", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "fetch_customer_email", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "validate_email_domain", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "lookup_existing_account", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "check_ip_geolocation", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "verify_phone_number", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "scan_passport", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "extract_passport_fields", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "match_face_to_document", risk: "medium", premium: "0.0032", limit: "400", delay: 0, resolveDelay: 0 },
+  { tool: "verify_home_address", risk: "low", delay: 0, resolveDelay: 0 },
+  { tool: "check_sanctions_db", risk: "medium", premium: "0.0028", limit: "500", delay: 0, resolveDelay: 0 },
+  { tool: "pull_credit_report", risk: "medium", premium: "0.0035", limit: "450", delay: 0, resolveDelay: 0 },
+  // -- Live simulation --
   { tool: "validate_bank_account", risk: "medium", premium: "0.0022", limit: "380", delay: 800, resolveDelay: 600 },
   { tool: "run_fraud_model", risk: "medium", premium: "0.0041", limit: "520", delay: 1000, resolveDelay: 900 },
   { tool: "send_verification_sms", risk: "low", delay: 700, resolveDelay: 400 },
@@ -37,6 +48,8 @@ const DEMO_SCRIPT: DemoStep[] = [
   { tool: "notify_compliance_team", risk: "low", delay: 700, resolveDelay: 500 },
   { tool: "issue_account_credentials", risk: "medium", premium: "0.0019", limit: "300", delay: 900, resolveDelay: 600 },
 ]
+
+const HISTORICAL_COUNT = 12
 
 const NETWORK = "defter:testnet"
 const ASSET = "USDC"
@@ -132,14 +145,21 @@ function buildState(agentId: string, phases: PhaseEntry[]): AgentEventState {
 export function useDemoSimulation(agentId: string, enabled: boolean) {
   const [phases, setPhases] = useState<PhaseEntry[]>([])
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const startedRef = useRef(false)
 
   useEffect(() => {
-    if (!enabled) return
-    if (startedRef.current) return
-    startedRef.current = true
+    if (!enabled) {
+      setPhases([])
+      return
+    }
 
-    let step = 0
+    // Seed historical actions (already resolved) then animate the rest
+    const historical: PhaseEntry[] = Array.from({ length: HISTORICAL_COUNT }, (_, i) => ({
+      stepIndex: i,
+      resolved: true,
+    }))
+    setPhases(historical)
+
+    let step = HISTORICAL_COUNT
     const timers: ReturnType<typeof setTimeout>[] = []
 
     const scheduleNext = () => {
@@ -174,7 +194,7 @@ export function useDemoSimulation(agentId: string, enabled: boolean) {
       timers.forEach(clearTimeout)
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [enabled])
+  }, [enabled, agentId])
 
   const state = buildState(agentId, phases)
   const isRunning = phases.length < DEMO_SCRIPT.length || phases.some((p) => !p.resolved)

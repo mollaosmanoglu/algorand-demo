@@ -55,7 +55,7 @@ export function deriveStateLogLines(state: AgentEventState): AgentLogLine[] {
           id: `${action.id}-quote`,
           timestamp,
           label: "QUOTE",
-          message: `${action.tool_name} premium=${quote.premium_usdc} USDC limit=${quote.coverage_limit_usdc} USDC`,
+          message: `${action.tool_name} premium=$${quote.premium_usdc} limit=$${quote.coverage_limit_usdc}`,
           level: "warning",
         })
       }
@@ -91,7 +91,7 @@ type MockAction = {
 }
 
 const NETWORK = "defter:testnet"
-const ASSET = "USDC"
+const ASSET = ""
 const ACTION_DAY_OFFSETS = [
   0, 0, 0, 0, 0,
   1, 1, 1, 1,
@@ -115,8 +115,8 @@ const agentScenarios: Record<
   "invoice-parser": {
     objective: "Extract and validate invoice fields",
     policy: "Document Processing Cover",
-    wallet: "42.18 USDC",
-    perCallLimit: "250 USDC",
+    wallet: "$42.18",
+    perCallLimit: "$250",
     actions: [
       { tool: "parse_invoice_pdf", risk: "low", status: "succeeded" },
       { tool: "store_invoice_record", risk: "medium", status: "succeeded", premium: "0.0012", limit: "180" },
@@ -126,8 +126,8 @@ const agentScenarios: Record<
   "vendor-checker": {
     objective: "Verify vendors before payment approval",
     policy: "Vendor Verification Cover",
-    wallet: "31.64 USDC",
-    perCallLimit: "500 USDC",
+    wallet: "$31.64",
+    perCallLimit: "$500",
     actions: [
       { tool: "lookup_vendor_registry", risk: "low", status: "succeeded" },
       { tool: "update_vendor_status", risk: "medium", status: "succeeded", premium: "0.0025", limit: "400" },
@@ -137,8 +137,8 @@ const agentScenarios: Record<
   "payment-reviewer": {
     objective: "Review outgoing payments before release",
     policy: "Payment Review Cover",
-    wallet: "58.92 USDC",
-    perCallLimit: "1,000 USDC",
+    wallet: "$58.92",
+    perCallLimit: "$1,000",
     actions: [
       { tool: "review_payment_batch", risk: "medium", status: "succeeded" },
       { tool: "release_vendor_payment", risk: "high", status: "succeeded", premium: "0.0048", limit: "950" },
@@ -148,8 +148,8 @@ const agentScenarios: Record<
   "ticket-router": {
     objective: "Classify and route incoming support tickets",
     policy: "Support Operations Cover",
-    wallet: "24.75 USDC",
-    perCallLimit: "100 USDC",
+    wallet: "$24.75",
+    perCallLimit: "$100",
     actions: [
       { tool: "classify_ticket", risk: "low", status: "succeeded" },
       { tool: "assign_support_queue", risk: "low", status: "succeeded" },
@@ -159,8 +159,8 @@ const agentScenarios: Record<
   "response-writer": {
     objective: "Draft accurate customer support responses",
     policy: "Customer Communications Cover",
-    wallet: "27.41 USDC",
-    perCallLimit: "150 USDC",
+    wallet: "$27.41",
+    perCallLimit: "$150",
     actions: [
       { tool: "read_customer_history", risk: "low", status: "succeeded" },
       { tool: "send_customer_reply", risk: "medium", status: "succeeded", premium: "0.0015", limit: "120" },
@@ -170,8 +170,8 @@ const agentScenarios: Record<
   "refund-reviewer": {
     objective: "Assess refund eligibility and exposure",
     policy: "Refund Decision Cover",
-    wallet: "36.09 USDC",
-    perCallLimit: "750 USDC",
+    wallet: "$36.09",
+    perCallLimit: "$750",
     actions: [
       { tool: "inspect_refund_request", risk: "low", status: "succeeded" },
       { tool: "approve_customer_refund", risk: "high", status: "succeeded", premium: "0.0036", limit: "700" },
@@ -181,8 +181,8 @@ const agentScenarios: Record<
   "escalation-agent": {
     objective: "Escalate sensitive customer cases",
     policy: "Escalation Response Cover",
-    wallet: "29.83 USDC",
-    perCallLimit: "300 USDC",
+    wallet: "$29.83",
+    perCallLimit: "$300",
     actions: [
       { tool: "score_escalation_risk", risk: "medium", status: "succeeded" },
       { tool: "page_incident_manager", risk: "medium", status: "succeeded", premium: "0.0018", limit: "260" },
@@ -192,8 +192,8 @@ const agentScenarios: Record<
   "kyc-verifier": {
     objective: "Verify customer identity for onboarding",
     policy: "Identity Verification Cover",
-    wallet: "45.20 USDC",
-    perCallLimit: "600 USDC",
+    wallet: "$45.20",
+    perCallLimit: "$600",
     actions: [
       { tool: "scan_passport", risk: "low", status: "succeeded" },
       { tool: "check_sanctions_db", risk: "medium", status: "succeeded", premium: "0.0031", limit: "500" },
@@ -322,7 +322,7 @@ function buildDashboard(agentId: string): MockAgentDashboard {
           : item.status === "failed"
             ? "failed during execution"
             : covered
-              ? `settled premium=${item.premium} USDC`
+              ? `settled premium=$${item.premium}`
               : "completed"
       }`,
       level:

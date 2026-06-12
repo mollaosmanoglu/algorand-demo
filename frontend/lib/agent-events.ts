@@ -164,10 +164,10 @@ function formatTime(value: string): string {
 export function formatUsdc(value: string | null | undefined): string {
   if (!value) return "-"
   const amount = Number(value)
-  if (!Number.isFinite(amount)) return `${value} USDC`
-  return `${amount.toLocaleString(undefined, {
+  if (!Number.isFinite(amount)) return `$${value}`
+  return `$${amount.toLocaleString(undefined, {
     maximumFractionDigits: 6,
-  })} USDC`
+  })}`
 }
 
 export function friendlyNetwork(network: string): string {
