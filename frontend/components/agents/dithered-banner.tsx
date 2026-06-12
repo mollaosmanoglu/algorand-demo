@@ -354,7 +354,7 @@ export function DitheredBanner({
 
       const sx = rect.width / processed.width
       const sy = rect.height / processed.height
-      const s = Math.max(sx, sy)
+      const s = Math.min(sx, sy)
       const ox = Math.round((rect.width - processed.width * s) / 2)
       const oy = Math.round((rect.height - processed.height * s) / 2)
 

@@ -422,14 +422,12 @@ export function AgentsPage({
 
               <ScrollArea className="min-h-0 flex-1">
                 <div className="px-6 py-5">
-                  <div className="w-full overflow-hidden rounded-md border border-border">
-                    <DitheredBanner
-                      src="/images/onizuka-banner.png"
-                      className="w-full aspect-[3/1]"
-                      dotColor="rgba(0,0,0,0.85)"
-                      bgColor="#f4f4f5"
-                    />
-                  </div>
+                  <DitheredBanner
+                    src="/images/agent.png"
+                    className="w-full aspect-[3/1]"
+                    dotColor="rgba(0,0,0,0.85)"
+                    bgColor="transparent"
+                  />
 
                   <div className="mt-6 min-w-0">
                     <div className="mb-5 min-w-0">
