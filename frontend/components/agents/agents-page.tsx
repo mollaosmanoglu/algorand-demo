@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
   Collapsible,
-  CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -395,8 +394,15 @@ export function AgentsPage({
           </ScrollArea>
         </section>
 
-        <CollapsibleContent asChild forceMount>
-          <aside className="hidden w-[min(46vw,560px)] min-w-[430px] shrink-0 flex-col bg-card data-[state=closed]:lg:hidden lg:flex">
+        <AnimatePresence initial={false}>
+          {rightPanelOpen && (
+          <motion.aside
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: "min(46vw, 560px)", opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: "spring", bounce: 0.1, duration: 0.35 }}
+            className="hidden min-w-0 shrink-0 flex-col bg-card overflow-hidden lg:flex"
+          >
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="flex h-12 items-center justify-between border-b border-border px-4">
                 <Tabs value={profileTab} onValueChange={setProfileTab} className="gap-0">
@@ -591,8 +597,9 @@ export function AgentsPage({
                 )
               ) : null}
             </div>
-          </aside>
-        </CollapsibleContent>
+          </motion.aside>
+          )}
+        </AnimatePresence>
       </div>
       </Collapsible>
     </MotionConfig>

@@ -305,6 +305,7 @@ export function DitheredBanner({
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext("2d")!
+    ctx.imageSmoothingEnabled = false
     const dpr = window.devicePixelRatio || 1
 
     const tick = () => {
@@ -365,27 +366,31 @@ export function DitheredBanner({
   )
 
   useEffect(() => {
-    rebuildParticles(src)
-  }, [src, rebuildParticles])
-
-  useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ctx = canvas.getContext("2d")!
+    ctx.imageSmoothingEnabled = false
     const dpr = window.devicePixelRatio || 1
 
     let resizeTimer: ReturnType<typeof setTimeout> | null = null
+    let hasBuilt = false
 
     const handleResize = () => {
       const rect = canvas.getBoundingClientRect()
+      if (rect.width < 10 || rect.height < 10) return
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       const sys = systemRef.current
       if (sys) renderDots(ctx, sys, rect.width, rect.height, dpr, dotColor)
 
-      if (resizeTimer) clearTimeout(resizeTimer)
-      resizeTimer = setTimeout(() => rebuildParticles(src), 200)
+      if (!hasBuilt) {
+        hasBuilt = true
+        rebuildParticles(src)
+      } else {
+        if (resizeTimer) clearTimeout(resizeTimer)
+        resizeTimer = setTimeout(() => rebuildParticles(src), 200)
+      }
     }
 
     handleResize()
@@ -436,7 +441,7 @@ export function DitheredBanner({
     <canvas
       ref={canvasRef}
       className={`block touch-none ${className}`}
-      style={{ cursor: "default", background: bgColor }}
+      style={{ cursor: "default", background: bgColor, imageRendering: "pixelated" }}
     />
   )
 }
