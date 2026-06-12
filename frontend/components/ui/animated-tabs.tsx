@@ -34,11 +34,11 @@ export const AnimatedTabsTrigger = React.forwardRef<
           className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-foreground"
           initial={{ opacity: 0, scaleX: 0 }}
           animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ type: "spring", bounce: 0.1, duration: 0.3 }}
+          transition={{ type: "spring", bounce: 0.1, duration: 0.25 }}
         />
       )}
 
-      <span className="relative z-10 px-2 py-1 rounded-md transition-colors duration-150 hover:bg-[hsl(var(--tab-hover))]">
+      <span className="relative z-10 px-2 py-1 rounded-md transition-colors duration-[var(--duration-quick)] hover:bg-[hsl(var(--tab-hover))]">
         {children}
       </span>
     </TabsPrimitive.Trigger>

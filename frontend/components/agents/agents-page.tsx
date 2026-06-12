@@ -43,6 +43,7 @@ import {
 } from "@/lib/mock-agent-dashboards"
 import { AgentEventTerminal } from "@/components/agents/agent-event-terminal"
 import { DitheredBanner } from "@/components/agents/dithered-banner"
+import { useDemoSimulation } from "@/hooks/use-demo-simulation"
 
 type AgentsPageProps = {
   agent: string
@@ -67,7 +68,7 @@ function statusStyle(status: string) {
   return "text-muted-foreground"
 }
 
-const revealTransition = { duration: 0.2, ease: "easeOut" as const }
+const revealTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }
 
 function AnimatedValue({
   value,
@@ -88,7 +89,7 @@ function AnimatedValue({
           className="block"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, filter: "blur(2px)" }}
           transition={revealTransition}
         >
           <Skeleton className={skeletonClassName} />
@@ -97,8 +98,8 @@ function AnimatedValue({
         <motion.span
           key={String(value)}
           className={className}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, filter: "blur(2px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
           transition={revealTransition}
         >
           {value}
@@ -122,11 +123,15 @@ export function AgentsPage({
   const [settlementTab, setSettlementTab] = React.useState("settlements")
   const liveEvents = useAgentEvents()
   const mockDashboard = live ? undefined : mockAgentDashboards[agent]
+  const isDemo = agent === "kyc-verifier"
+  const demo = useDemoSimulation(agent, isDemo)
   const selectedState = React.useMemo(
     () =>
-      mockDashboard?.state ??
-      filterAgentEventState(liveEvents.state, agent),
-    [agent, liveEvents.state, mockDashboard],
+      isDemo
+        ? demo.state
+        : mockDashboard?.state ??
+          filterAgentEventState(liveEvents.state, agent),
+    [agent, liveEvents.state, mockDashboard, isDemo, demo.state],
   )
   const rows = React.useMemo(() => deriveActionRows(selectedState), [selectedState])
   const latestReceipt = React.useMemo(
@@ -153,10 +158,10 @@ export function AgentsPage({
     )
   }, [selectedState.quotes, selectedState.receipts])
   const logLines = React.useMemo(
-    () => mockDashboard?.logs ?? deriveStateLogLines(selectedState),
-    [mockDashboard, selectedState],
+    () => isDemo ? deriveStateLogLines(selectedState) : (mockDashboard?.logs ?? deriveStateLogLines(selectedState)),
+    [mockDashboard, selectedState, isDemo],
   )
-  const connectionStatus = live ? liveEvents.connectionStatus : "connected"
+  const connectionStatus = isDemo || live ? (isDemo ? "connected" : liveEvents.connectionStatus) : "connected"
   const agentProfileStats = [
     {
       label: "Status",
@@ -315,8 +320,8 @@ export function AgentsPage({
                         <motion.tr
                           key={event.id}
                           title={event.rationale ?? undefined}
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                           transition={revealTransition}
                           className="border-b border-border/50 cursor-pointer transition-colors hover:bg-accent"
                         >
@@ -400,7 +405,7 @@ export function AgentsPage({
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: "min(46vw, 560px)", opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            transition={{ type: "spring", bounce: 0.1, duration: 0.35 }}
+            transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
             className="hidden min-w-0 shrink-0 flex-col bg-card overflow-hidden lg:flex"
           >
             <div className="flex min-h-0 flex-1 flex-col">

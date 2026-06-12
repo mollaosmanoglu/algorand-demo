@@ -64,18 +64,23 @@ export const programmingProjects: ProgrammingProject[] = [
     ],
   },
   {
-    id: "algorand-demo",
-    name: "algorand-demo",
-    path: "~/programming/algorand-demo",
-    agents: [],
-    live: true,
+    id: "fintech-onboard",
+    name: "fintech-onboard",
+    path: "~/programming/fintech-onboard",
+    agents: [
+      {
+        id: "kyc-verifier",
+        name: "Lagos",
+        description: "Verifies customer identity documents",
+      },
+    ],
   },
 ]
 
 export function findProject(projectId?: string): ProgrammingProject {
   return (
     programmingProjects.find((project) => project.id === projectId) ??
-    programmingProjects.find((project) => project.id === "algorand-demo")!
+    programmingProjects.find((project) => project.id === "fintech-onboard")!
   )
 }
 

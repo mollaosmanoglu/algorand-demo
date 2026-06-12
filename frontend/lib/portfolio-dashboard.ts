@@ -122,7 +122,7 @@ export function derivePortfolioDashboard(liveState: AgentEventState) {
       const evaluation = state.evaluations[action.id]
       const quote = quotesByAction.get(action.id)
       const receipt = receiptsByAction.get(action.id)
-      const projectId = mockAgentProject.get(action.agent_id) ?? "algorand-demo"
+      const projectId = mockAgentProject.get(action.agent_id) ?? "fintech-onboard"
       const agent =
         mockAgentName.get(action.agent_id) ??
         liveNames.get(action.agent_id) ??

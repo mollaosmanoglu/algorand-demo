@@ -51,7 +51,7 @@ export function DashboardSidebar() {
 
   const navItems = [{ icon: LayoutDashboard, label: "Overview", href: "/" }];
 
-  const selectedProject = searchParams.get("project") ?? "algorand-demo";
+  const selectedProject = searchParams.get("project") ?? "fintech-onboard";
   const selectedAgent = searchParams.get("agent");
   const { state, connectionStatus } = useAgentEvents();
   const liveAgents = React.useMemo(
@@ -204,7 +204,7 @@ export function DashboardSidebar() {
                     >
                       <FolderOpen className="w-3.5 h-3.5" />
                       <span className="text-body">Projects</span>
-                      <ChevronDown className="ml-auto w-3.5 h-3.5 transition-transform duration-200 ease-out group-data-[state=open]/projects:rotate-180 group-data-[collapsible=icon]:hidden" />
+                      <ChevronDown className="ml-auto w-3.5 h-3.5 transition-transform duration-[var(--duration-quick)] ease-[var(--ease-smooth-out)] group-data-[state=open]/projects:rotate-180 group-data-[collapsible=icon]:hidden" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="sidebar-collapsible-content">
@@ -224,7 +224,7 @@ export function DashboardSidebar() {
                               >
                                 <Folder className="w-3.5 h-3.5" />
                                 <span className="truncate">{project.name}</span>
-                                <ChevronDown className="ml-auto w-3 h-3 transition-transform duration-200 ease-out group-data-[state=open]/project:rotate-180" />
+                                <ChevronDown className="ml-auto w-3 h-3 transition-transform duration-[var(--duration-quick)] ease-[var(--ease-smooth-out)] group-data-[state=open]/project:rotate-180" />
                               </SidebarMenuSubButton>
                             </CollapsibleTrigger>
                             <CollapsibleContent className="sidebar-collapsible-content">

@@ -189,6 +189,17 @@ const agentScenarios: Record<
       { tool: "close_active_escalation", risk: "high", status: "cancelled", denied: true },
     ],
   },
+  "kyc-verifier": {
+    objective: "Verify customer identity for onboarding",
+    policy: "Identity Verification Cover",
+    wallet: "45.20 USDC",
+    perCallLimit: "600 USDC",
+    actions: [
+      { tool: "scan_passport", risk: "low", status: "succeeded" },
+      { tool: "check_sanctions_db", risk: "medium", status: "succeeded", premium: "0.0031", limit: "500" },
+      { tool: "approve_kyc_override", risk: "high", status: "cancelled", denied: true },
+    ],
+  },
 }
 
 function buildDashboard(agentId: string): MockAgentDashboard {
